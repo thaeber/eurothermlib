@@ -1,0 +1,19 @@
+# sampling_rate: 5.0
+# simulate: False
+
+server:
+  ip: localhost
+  port: 50060
+# logging:
+#   # target path and filename
+#   dir: ./outputs/tclog/${now:%Y-%m-%d}
+#   filename: ${now:%Y-%m-%dT%H-%M-%S}.csv
+
+#   # formatting
+#   unit: kelvin
+#   format: "%.2f"
+#   separator: ";"
+
+#   # timing
+#   write_interval: 5.0 # [s]; write readings in groups at given interval
+

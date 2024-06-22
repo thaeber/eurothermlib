@@ -1,0 +1,23 @@
+version: 1
+formatters:
+  simple:
+    format: "[%(asctime)s][%(levelname)s][%(thread)s][%(filename)s:%(lineno)d] - %(message)s"
+    datefmt: "%Y-%m-%d %H:%M:%S"
+  rich:
+    format: "[%(thread)s] %(message)s"
+handlers:
+  console:
+    class: rich.logging.RichHandler
+    formatter: rich
+    markup: False
+  file:
+    class: logging.FileHandler
+    formatter: simple
+    filename: ./outputs/tclogger.log
+    mode: a
+root:
+  level: INFO
+  handlers:
+    - console
+    - file
+disable_existing_loggers: false

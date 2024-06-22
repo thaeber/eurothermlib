@@ -17,6 +17,10 @@ click = "^8.1.4"
 numpy = "^1.25.1"
 pint = "^0.22"
 rich = "^13.4.2"
+grpcio = "^1.64.1"
+omegaconf = "^2.3.0"
+pydantic = "^2.7.4"
+pyserial = "^3.5"
 
 
 [tool.poetry.group.dev.dependencies]
@@ -29,6 +33,9 @@ pytest-watcher = "^0.4.2"
 git-changelog = "^2.5.2"
 pre-commit = "^3.7.1"
 bump-my-version = "^0.21.1"
+grpcio-tools = "^1.64.1"
+grpc-stubs = "^1.53.0.5"
+mypy-protobuf = "^3.6.0"
 
 [build-system]
 requires = ["poetry-core"]
