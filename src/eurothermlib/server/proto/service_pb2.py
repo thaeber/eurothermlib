@@ -14,7 +14,7 @@ _sym_db = _symbol_database.Default()
 
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\rservice.proto\"\x07\n\x05\x45mpty\"\r\n\x0bStopRequest2X\n\tEurotherm\x12$\n\nStopServer\x12\x0c.StopRequest\x1a\x06.Empty\"\x00\x12%\n\x11ServerHealthCheck\x12\x06.Empty\x1a\x06.Empty\"\x00\x42\x03\x90\x01\x01\x62\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\rservice.proto\"\x07\n\x05\x45mpty\"\r\n\x0bStopRequest\"\x1c\n\x1aStreamProcessValuesRequest\"$\n\rProcessValues\x12\x13\n\x0bpickledData\x18\x01 \x01(\x0c\x32\xa0\x01\n\tEurotherm\x12$\n\nStopServer\x12\x0c.StopRequest\x1a\x06.Empty\"\x00\x12%\n\x11ServerHealthCheck\x12\x06.Empty\x1a\x06.Empty\"\x00\x12\x46\n\x13StreamProcessValues\x12\x1b.StreamProcessValuesRequest\x1a\x0e.ProcessValues\"\x00\x30\x01\x42\x03\x90\x01\x01\x62\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
@@ -26,7 +26,11 @@ if not _descriptor._USE_C_DESCRIPTORS:
   _globals['_EMPTY']._serialized_end=24
   _globals['_STOPREQUEST']._serialized_start=26
   _globals['_STOPREQUEST']._serialized_end=39
-  _globals['_EUROTHERM']._serialized_start=41
-  _globals['_EUROTHERM']._serialized_end=129
+  _globals['_STREAMPROCESSVALUESREQUEST']._serialized_start=41
+  _globals['_STREAMPROCESSVALUESREQUEST']._serialized_end=69
+  _globals['_PROCESSVALUES']._serialized_start=71
+  _globals['_PROCESSVALUES']._serialized_end=107
+  _globals['_EUROTHERM']._serialized_start=110
+  _globals['_EUROTHERM']._serialized_end=270
 _builder.BuildServices(DESCRIPTOR, 'service_pb2', _globals)
 # @@protoc_insertion_point(module_scope)

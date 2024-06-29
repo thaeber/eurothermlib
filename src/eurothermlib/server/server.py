@@ -1,9 +1,11 @@
 import logging
+import pickle
 import threading
 from concurrent import futures
-from typing import TypeVar
 
 import grpc
+import xarray as xr
+from _collections_abc import AsyncIterator, Iterator
 
 from ..configuration import ServerConfig
 from .proto import service_pb2, service_pb2_grpc
@@ -35,6 +37,13 @@ class EurothermServicer(service_pb2_grpc.EurothermServicer):
         _logger.info('[Request] ServerHealthCheck')
         return service_pb2.Empty()
 
+    def StreamProcessValues(
+        self,
+        request: service_pb2.StreamProcessValuesRequest,
+        context: grpc.ServicerContext,
+    ) -> Iterator[service_pb2.ProcessValues] | AsyncIterator[service_pb2.ProcessValues]:
+        return super().StreamProcessValues(request, context)
+
 
 class EurothermClient:
 
@@ -46,6 +55,12 @@ class EurothermClient:
 
     def is_alive(self):
         self._client.ServerHealthCheck(service_pb2.Empty())
+
+    def stream_process_values(self):
+        request = service_pb2.StreamProcessValuesRequest()
+        for response in self._client.StreamProcessValues(request):
+            da: xr.DataArray = pickle.loads(response.pickledData)
+            yield da
 
 
 def is_alive(cfg: ServerConfig):

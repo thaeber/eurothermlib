@@ -7,9 +7,19 @@ service Eurotherm {
 
     // Does nothing. Used to check sever health.
     rpc ServerHealthCheck(Empty) returns (Empty) {}
+
+    // stream process values
+    rpc StreamProcessValues(StreamProcessValuesRequest) returns (stream ProcessValues) {}
 }
 
 message Empty {}
 
 message StopRequest {}
+
+message StreamProcessValuesRequest {}
+
+message ProcessValues {
+    // Contains a pickles xarray.DataArray with the data
+    bytes pickledData = 1;
+}
 

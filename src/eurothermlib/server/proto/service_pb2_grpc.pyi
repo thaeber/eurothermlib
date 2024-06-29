@@ -31,6 +31,12 @@ class EurothermStub:
     ]
     """Does nothing. Used to check sever health."""
 
+    StreamProcessValues: grpc.UnaryStreamMultiCallable[
+        service_pb2.StreamProcessValuesRequest,
+        service_pb2.ProcessValues,
+    ]
+    """stream process values"""
+
 class EurothermAsyncStub:
     StopServer: grpc.aio.UnaryUnaryMultiCallable[
         service_pb2.StopRequest,
@@ -43,6 +49,12 @@ class EurothermAsyncStub:
         service_pb2.Empty,
     ]
     """Does nothing. Used to check sever health."""
+
+    StreamProcessValues: grpc.aio.UnaryStreamMultiCallable[
+        service_pb2.StreamProcessValuesRequest,
+        service_pb2.ProcessValues,
+    ]
+    """stream process values"""
 
 class EurothermServicer(metaclass=abc.ABCMeta):
     @abc.abstractmethod
@@ -60,5 +72,13 @@ class EurothermServicer(metaclass=abc.ABCMeta):
         context: _ServicerContext,
     ) -> typing.Union[service_pb2.Empty, collections.abc.Awaitable[service_pb2.Empty]]:
         """Does nothing. Used to check sever health."""
+
+    @abc.abstractmethod
+    def StreamProcessValues(
+        self,
+        request: service_pb2.StreamProcessValuesRequest,
+        context: _ServicerContext,
+    ) -> typing.Union[collections.abc.Iterator[service_pb2.ProcessValues], collections.abc.AsyncIterator[service_pb2.ProcessValues]]:
+        """stream process values"""
 
 def add_EurothermServicer_to_server(servicer: EurothermServicer, server: typing.Union[grpc.Server, grpc.aio.Server]) -> None: ...

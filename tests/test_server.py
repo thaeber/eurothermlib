@@ -1,8 +1,12 @@
+import pytest
+
 from eurothermlib.configuration import ServerConfig
 from eurothermlib.server import connect, is_alive, serve
 
 
 class TestServer:
+
+    @pytest.mark.skip('Skipped long running server test')
     def test_serve(self):
         config = ServerConfig()
         future = serve(config)

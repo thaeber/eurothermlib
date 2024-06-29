@@ -21,6 +21,12 @@ class ServerConfig(BaseModel):
     port: int = 50061
 
 
+class Config(BaseModel):
+    simulate: bool = True
+    sampling_rate: float = 1.0  # [Hz]
+    server: ServerConfig = ServerConfig()
+
+
 # @dataclass
 # class LoggingConfig:
 #     # target path and filename

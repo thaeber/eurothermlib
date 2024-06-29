@@ -4,6 +4,7 @@ isort:skip_file
 """
 
 import abc
+import builtins
 import collections.abc
 import concurrent.futures
 import google.protobuf.descriptor
@@ -33,6 +34,32 @@ class StopRequest(google.protobuf.message.Message):
 
 global___StopRequest = StopRequest
 
+@typing.final
+class StreamProcessValuesRequest(google.protobuf.message.Message):
+    DESCRIPTOR: google.protobuf.descriptor.Descriptor
+
+    def __init__(
+        self,
+    ) -> None: ...
+
+global___StreamProcessValuesRequest = StreamProcessValuesRequest
+
+@typing.final
+class ProcessValues(google.protobuf.message.Message):
+    DESCRIPTOR: google.protobuf.descriptor.Descriptor
+
+    PICKLEDDATA_FIELD_NUMBER: builtins.int
+    pickledData: builtins.bytes
+    """Contains a pickles xarray.DataArray with the data"""
+    def __init__(
+        self,
+        *,
+        pickledData: builtins.bytes = ...,
+    ) -> None: ...
+    def ClearField(self, field_name: typing.Literal["pickledData", b"pickledData"]) -> None: ...
+
+global___ProcessValues = ProcessValues
+
 class Eurotherm(google.protobuf.service.Service, metaclass=abc.ABCMeta):
     DESCRIPTOR: google.protobuf.descriptor.ServiceDescriptor
     @abc.abstractmethod
@@ -53,6 +80,15 @@ class Eurotherm(google.protobuf.service.Service, metaclass=abc.ABCMeta):
     ) -> concurrent.futures.Future[global___Empty]:
         """Does nothing. Used to check sever health."""
 
+    @abc.abstractmethod
+    def StreamProcessValues(
+        inst: Eurotherm,  # pyright: ignore[reportSelfClsParameterName]
+        rpc_controller: google.protobuf.service.RpcController,
+        request: global___StreamProcessValuesRequest,
+        callback: collections.abc.Callable[[global___ProcessValues], None] | None,
+    ) -> concurrent.futures.Future[global___ProcessValues]:
+        """stream process values"""
+
 class Eurotherm_Stub(Eurotherm):
     def __init__(self, rpc_channel: google.protobuf.service.RpcChannel) -> None: ...
     DESCRIPTOR: google.protobuf.descriptor.ServiceDescriptor
@@ -71,3 +107,11 @@ class Eurotherm_Stub(Eurotherm):
         callback: collections.abc.Callable[[global___Empty], None] | None = ...,
     ) -> concurrent.futures.Future[global___Empty]:
         """Does nothing. Used to check sever health."""
+
+    def StreamProcessValues(
+        inst: Eurotherm_Stub,  # pyright: ignore[reportSelfClsParameterName]
+        rpc_controller: google.protobuf.service.RpcController,
+        request: global___StreamProcessValuesRequest,
+        callback: collections.abc.Callable[[global___ProcessValues], None] | None = ...,
+    ) -> concurrent.futures.Future[global___ProcessValues]:
+        """stream process values"""
