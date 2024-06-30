@@ -1,6 +1,8 @@
 syntax = "proto3";
 option py_generic_services = true;
 
+import "google/protobuf/timestamp.proto";
+
 service Eurotherm {
     // Terminate/stop server.
     rpc StopServer(StopRequest) returns (Empty) {}
@@ -19,7 +21,10 @@ message StopRequest {}
 message StreamProcessValuesRequest {}
 
 message ProcessValues {
-    // Contains a pickles xarray.DataArray with the data
-    bytes pickledData = 1;
+    google.protobuf.Timestamp timestamp = 1;
+    double processValue = 2;
+    double measuredValue = 3;
+    double workingSetpoint = 4;
+    double workingOutput = 5;
 }
 

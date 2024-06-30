@@ -1,4 +1,9 @@
-from eurothermlib.configuration import Config, ServerConfig
+from eurothermlib.configuration import (
+    Config,
+    DeviceConfig,
+    SerialPortConfig,
+    ServerConfig,
+)
 
 
 class TestServerConfig:
@@ -13,8 +18,21 @@ class TestServerConfig:
         assert config.port == 180
 
 
-class TestConfig:
+class TestSerialPortConfig:
     def test_create_default_instance(self):
-        config = Config()
-        assert config.simulate == True
+        config = SerialPortConfig()
+        assert config.port == 'COM1'
+        assert config.baudRate == 19200
+
+
+class TestDeviceConfig:
+    def test_create_default_instance(self):
+        config = DeviceConfig()
+        assert config.unitAddress == 1
         assert config.sampling_rate == 1.0
+        assert config.simulate == True
+
+
+class TestConfig:
+    def test_create_instance(self):
+        config = Config(devices=[])

@@ -1,27 +1,13 @@
 from abc import ABC, abstractmethod
-from typing import ClassVar, Optional, TypeAlias, cast
+from typing import TypeAlias, cast
 
 import numpy as np
 import pint
-from pint.registry import Quantity
 from serial import Serial
 
+from .utils import TypedQuantity
+
 ureg = pint.application_registry.get()
-
-
-class TypedQuantity(pint.Quantity):
-    __dimensionality__: ClassVar[str | None] = None
-
-    def __class_getitem__(cls, item):
-        return type(cls.__name__, (cls,), {"__dimensionality__": item})
-
-    def __init__(self, *args, **kwargs):
-        if not self.check(self.__dimensionality__):  # type: ignore
-            raise pint.DimensionalityError(
-                units2=self.__dimensionality__,
-                units1=self.units,
-                extra_msg=f' (value = {self})',
-            )
 
 
 class VoltageQ(TypedQuantity['[electric_potential]']):

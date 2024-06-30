@@ -2,6 +2,8 @@ import logging
 import pickle
 import threading
 from concurrent import futures
+from queue import Empty as EmptyError
+from queue import Queue
 
 import grpc
 import xarray as xr
@@ -42,7 +44,50 @@ class EurothermServicer(service_pb2_grpc.EurothermServicer):
         request: service_pb2.StreamProcessValuesRequest,
         context: grpc.ServicerContext,
     ) -> Iterator[service_pb2.ProcessValues] | AsyncIterator[service_pb2.ProcessValues]:
-        return super().StreamProcessValues(request, context)
+        _logger.info('[Request] StreamTemperatures')
+
+        # start acquisition thread if necessary
+        self.io.start()
+
+        # place streamed values into a synchronized queue
+        # (this works because the observable emits all values
+        # on a different ThreadPool thread)
+        q = Queue[xr.DataArray]()
+        finished = threading.Event()
+
+        def errored(e: Exception):
+            _logger.exception('Error on observable.', exc_info=e)
+            finished.set()
+
+        def log(x):
+            _logger.info(x)
+            return x
+
+        observable = self.io.observable
+
+        subscription = observable.subscribe(
+            q.put,
+            on_completed=finished.set,
+            on_error=errored,
+        )
+
+        def cancel():
+            return finished.is_set() or self.stop_event.is_set()
+
+        try:
+            _logger.info('Starting stream...')
+            while not cancel():
+                try:
+                    da = q.get(timeout=5)
+                    response = service_pb2.Temperatures(pickledData=pickle.dumps(da))
+                    # _logger.info(f'Yielding at {timestamp}')
+                    yield response
+                except EmptyError:
+                    pass
+        finally:
+            # dispose subscription once iteration completes or terminates
+            subscription.dispose()
+            _logger.info('...stream stopped.')
 
 
 class EurothermClient:

@@ -2,7 +2,9 @@ import logging
 import logging.config
 from datetime import datetime
 from ipaddress import IPv4Address
+from typing import List, Literal
 
+import serial
 from omegaconf import OmegaConf
 from pydantic import BaseModel
 
@@ -21,10 +23,21 @@ class ServerConfig(BaseModel):
     port: int = 50061
 
 
-class Config(BaseModel):
-    simulate: bool = True
+class SerialPortConfig(BaseModel):
+    port: str = 'COM1'
+    baudRate: int = 19200
+
+
+class DeviceConfig(BaseModel):
+    unitAddress: int = 1
+    connection: SerialPortConfig = SerialPortConfig()
     sampling_rate: float = 1.0  # [Hz]
+    simulate: bool = True
+
+
+class Config(BaseModel):
     server: ServerConfig = ServerConfig()
+    devices: List[DeviceConfig]
 
 
 # @dataclass

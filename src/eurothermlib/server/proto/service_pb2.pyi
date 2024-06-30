@@ -10,6 +10,7 @@ import concurrent.futures
 import google.protobuf.descriptor
 import google.protobuf.message
 import google.protobuf.service
+import google.protobuf.timestamp_pb2
 import typing
 
 DESCRIPTOR: google.protobuf.descriptor.FileDescriptor
@@ -48,15 +49,28 @@ global___StreamProcessValuesRequest = StreamProcessValuesRequest
 class ProcessValues(google.protobuf.message.Message):
     DESCRIPTOR: google.protobuf.descriptor.Descriptor
 
-    PICKLEDDATA_FIELD_NUMBER: builtins.int
-    pickledData: builtins.bytes
-    """Contains a pickles xarray.DataArray with the data"""
+    TIMESTAMP_FIELD_NUMBER: builtins.int
+    PROCESSVALUE_FIELD_NUMBER: builtins.int
+    MEASUREDVALUE_FIELD_NUMBER: builtins.int
+    WORKINGSETPOINT_FIELD_NUMBER: builtins.int
+    WORKINGOUTPUT_FIELD_NUMBER: builtins.int
+    processValue: builtins.float
+    measuredValue: builtins.float
+    workingSetpoint: builtins.float
+    workingOutput: builtins.float
+    @property
+    def timestamp(self) -> google.protobuf.timestamp_pb2.Timestamp: ...
     def __init__(
         self,
         *,
-        pickledData: builtins.bytes = ...,
+        timestamp: google.protobuf.timestamp_pb2.Timestamp | None = ...,
+        processValue: builtins.float = ...,
+        measuredValue: builtins.float = ...,
+        workingSetpoint: builtins.float = ...,
+        workingOutput: builtins.float = ...,
     ) -> None: ...
-    def ClearField(self, field_name: typing.Literal["pickledData", b"pickledData"]) -> None: ...
+    def HasField(self, field_name: typing.Literal["timestamp", b"timestamp"]) -> builtins.bool: ...
+    def ClearField(self, field_name: typing.Literal["measuredValue", b"measuredValue", "processValue", b"processValue", "timestamp", b"timestamp", "workingOutput", b"workingOutput", "workingSetpoint", b"workingSetpoint"]) -> None: ...
 
 global___ProcessValues = ProcessValues
 
