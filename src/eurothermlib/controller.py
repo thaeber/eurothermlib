@@ -5,17 +5,9 @@ import numpy as np
 import pint
 from serial import Serial
 
-from .utils import TypedQuantity
+from .utils import TypedQuantity, TemperatureQ, VoltageQ, DimensionlessQ
 
 ureg = pint.application_registry.get()
-
-
-class VoltageQ(TypedQuantity['[electric_potential]']):
-    pass
-
-
-TemperatureQ: TypeAlias = TypedQuantity['[temperature]']
-DimensionlessQ: TypeAlias = TypedQuantity['[]']
 
 
 class EurothermController(ABC):
@@ -77,12 +69,12 @@ class EurothermSimulator(EurothermController):
         return cast(VoltageQ, VoltageQ(voltage, 'mV'))
 
     @property
-    def working_setpoint(self) -> pint.Quantity:
-        raise NotImplementedError()
+    def working_setpoint(self) -> TemperatureQ:
+        return cast(TemperatureQ, self._setpoint)
 
     @property
-    def working_output(self) -> pint.Quantity:
-        raise NotImplementedError()
+    def working_output(self):
+        return DimensionlessQ(0.0, '%')
 
 
 class EurothermModel3208(EurothermController):

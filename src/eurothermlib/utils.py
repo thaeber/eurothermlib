@@ -1,8 +1,14 @@
-from typing import Any, ClassVar
+# %%
+import re
+import tokenize
+from typing import Any, ClassVar, Type, TypeAlias
 
 import pint
+from pydantic import BaseModel, GetCoreSchemaHandler
+from pydantic_core import CoreSchema, core_schema
 
 
+# %%
 class TypedQuantity(pint.Quantity):
     __dimensionality__: ClassVar[str | None] = None
 
@@ -17,12 +23,84 @@ class TypedQuantity(pint.Quantity):
                 extra_msg=f' (value = {self})',
             )
 
-    @classmethod
-    def __get_validators__(cls):
-        yield cls.validate
+    @staticmethod
+    def parse_expression(input_string: str):
+        if m := re.match(
+            rf'(?P<number>{tokenize.Number}){tokenize.Whitespace}(?P<unit>(\[(.*)\])|(.*))',
+            input_string,
+        ):
+            number = m.group('number')
+            try:
+                number = int(number)
+            except ValueError:
+                number = float(number)
+
+            unit = m.group('unit')
+            # if unit and (unit[0] == '[') and (unit[-1] == ']'):
+            if unit and unit[0].startswith('[') and unit.endswith(']'):
+                unit = unit[1:-1]
+
+            return number, unit
+
+        else:
+            return None
 
     @classmethod
-    def validate(cls, v: Any) -> Any:
-        # your validation logic here
-        print(f"Validating {v} as {cls.__dimensionality__}")
-        return v
+    def _validate(cls, source_value, units=None):
+        ureg = pint.application_registry.get()
+        if source_value is None:
+            raise ValueError
+        try:
+            if units is not None:
+                value = ureg(source_value, units=units)
+            else:
+                if isinstance(source_value, str):
+                    # here we try to split the magnitude from the unit in case
+                    # only a single unit is given, e.g. "20degC". This avoids
+                    # an error with offset units where we cannot create a
+                    # quantity via pint.Quantity("20.0degC"), but
+                    # pint.Quantity(20.0, "degC") works
+                    # (see https://github.com/hgrecco/pint/issues/386)
+                    parsed = TypedQuantity.parse_expression(source_value)
+                    if parsed is not None:
+                        source_value, units = parsed
+                value = ureg.Quantity(source_value, units=units)  # type: ignore
+        except pint.UndefinedUnitError as ex:
+            raise ValueError(f'Cannot convert "{source_value}" to quantity') from ex
+        if not isinstance(value, pint.Quantity):
+            raise TypeError(f'pint.Quantity required ({value}, type = {type(value)})')
+        if cls.__dimensionality__ is not None:
+            if not value.check(cls.__dimensionality__):
+                raise ValueError(
+                    f"The dimensionality of the passed value ('{source_value}') must "
+                    f"be compatible with '{cls.__dimensionality__}'"
+                )
+        return value
+
+    @classmethod
+    def __get_pydantic_core_schema__(
+        cls, source_type: Type[Any], handler: GetCoreSchemaHandler
+    ) -> CoreSchema:
+        # assert source_type is Quantity
+        # print(source_type, type(source_type))
+        # assert issubclass(source_type, Quantity)
+        return core_schema.no_info_after_validator_function(
+            cls._validate,
+            core_schema.any_schema(),
+            serialization=core_schema.plain_serializer_function_ser_schema(
+                cls._serialize,
+                info_arg=False,
+                return_schema=core_schema.str_schema(),
+            ),
+        )
+
+    @staticmethod
+    def _serialize(value: pint.Quantity) -> str:
+        return str(value)
+
+
+VoltageQ: TypeAlias = TypedQuantity['[electric_potential]']
+TemperatureQ: TypeAlias = TypedQuantity['[temperature]']
+DimensionlessQ: TypeAlias = TypedQuantity['[]']
+
+# %%

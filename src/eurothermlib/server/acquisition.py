@@ -1,22 +1,32 @@
-import abc
 import logging
 import threading
 import time
 from abc import ABCMeta
+from dataclasses import dataclass
 from datetime import datetime
 from typing import Callable, List, Optional
 
-import numpy as np
-import numpy.typing as npt
 import reactivex
 import reactivex.operators as op
-import xarray as xr
 from reactivex.scheduler import ThreadPoolScheduler
 
-from ._configuration import DeviceConfig, TCLoggerConfig
+from ..configuration import DeviceConfig
+from ..controller import EurothermController, EurothermSimulator
+from ..utils import DimensionlessQ, TemperatureQ, VoltageQ
+
+
+@dataclass
+class TData:
+    deviceName: str
+    timestamp: datetime
+    processValue: TemperatureQ
+    measuredValue: VoltageQ
+    workingSetpoint: TemperatureQ
+    workingOutput: DimensionlessQ
+
 
 logger = logging.getLogger(__name__)
-TEmitter = Callable[[xr.DataArray], None]
+TEmitter = Callable[[TData], None]
 
 
 class SingletonMeta(ABCMeta):
@@ -28,28 +38,34 @@ class SingletonMeta(ABCMeta):
         return cls._instance[cls]
 
 
-class TemperatureIO(metaclass=SingletonMeta):
+class EurothermIO(metaclass=SingletonMeta):
 
-    def __init__(self, cfg: TCLoggerConfig) -> None:
+    def __init__(self, cfg: List[DeviceConfig]) -> None:
         super().__init__()
         self.cfg = cfg
         self._lock = threading.Lock()
         self._threads: List[IOThreadBase] = []
-        self._observable = reactivex.Subject[xr.DataArray]()
+        self._observable: Optional[reactivex.Subject[TData]] = None
         self._pool = ThreadPoolScheduler()
+
+    def _ensure_observable(self):
+        with self._lock:
+            if self._observable is None:
+                self._observable = reactivex.Subject[TData]()
+        return self._observable
+
+    def _emit(self, data: TData):
+        observable = self._ensure_observable()
+        observable.on_next(data)
 
     @property
     def observable(self):
-        return self._observable.pipe(op.observe_on(self._pool))
-
-    def _names(self):
-        for device in self.cfg.devices:
-            for channel in device.channels:
-                yield channel.name
+        observable = self._ensure_observable()
+        return observable.pipe(op.observe_on(self._pool))
 
     @property
     def names(self) -> List[str]:
-        return list(self._names())
+        return list([c.name for c in self.cfg])
 
     @property
     def number_of_channels(self) -> int:
@@ -59,20 +75,20 @@ class TemperatureIO(metaclass=SingletonMeta):
         with self._lock:
             if not self._threads:
                 # spin up a thread for each device
-                for device in self.cfg.devices:
-                    if device.simulate:
-                        thread = SimulateIOThread(device, self._emit)
-                    elif device.driver == 'nidaqmx':
-                        thread = NIDAQmxIOThread(device, self._emit)
-                    else:
-                        logger.error(f'Unknown device driver: {device.name}')
-                        continue
-                    thread.start()
-                    self._threads.append(thread)
+                for device in self.cfg:
+                    try:
+                        thread = IOThreadBase(device, self._emit)
+                        thread.start()
+                        self._threads.append(thread)
+                    except ValueError:
+                        logger.warning(
+                            f'Could not start acquisition thread for device: {device.name}'
+                        )
             else:
                 logger.debug('Acquisition threads already running.')
 
     def stop(self):
+        self.complete()
         with self._lock:
             if not self._threads:
                 return
@@ -84,11 +100,10 @@ class TemperatureIO(metaclass=SingletonMeta):
             self._threads = []
 
     def complete(self):
-        self.stop()
-        self._observable.on_completed()
-
-    def _emit(self, da: xr.DataArray):
-        self._observable.on_next(da)
+        with self._lock:
+            if self._observable is not None:
+                self._observable.on_completed()
+                self._observable = None
 
 
 class IOThreadBase(threading.Thread):
@@ -99,11 +114,20 @@ class IOThreadBase(threading.Thread):
         emit: TEmitter,
     ):
         super().__init__()
-        # self.daemon = True  # ensures that thread
+        self._lock = threading.Lock()
         self.device = device
-        self.channel_names = [d.name for d in device.channels]
         self.cancel_event = threading.Event()
         self._emit = emit
+        self.controller: EurothermController = EurothermSimulator()
+
+        match self.device.driver:
+            case 'simulate':
+                pass
+            # case 'model3208':
+            #     self.controller = EurothermModel3208(None)
+            case _:
+                logger.error(f'Unknown device driver: {device.driver}')
+                raise ValueError(f'Unknown device driver: {device.driver}')
 
     def cancel(self):
         self.cancel_event.set()
@@ -119,17 +143,17 @@ class IOThreadBase(threading.Thread):
             if (timeout is not None) and (time.monotonic() - start >= timeout):
                 return
 
-    def emit(self, values: npt.NDArray[np.float64], unit: str | pint.Unit):
-        da = xr.DataArray(
-            np.atleast_2d(values),
-            dims=('time', 'channel'),
-            coords=dict(
-                time=[np.datetime64(datetime.now(), 'ms')],
-                channel=self.channel_names,
-            ),
+    def emit(self):
+        controller = self.controller
+        data = TData(
+            deviceName=self.device.name,
+            timestamp=datetime.now(),
+            processValue=controller.process_value,
+            measuredValue=controller.measured_value,
+            workingSetpoint=controller.working_setpoint,
+            workingOutput=controller.working_output,
         )
-        da = da.pint.quantify(unit)
-        self._emit(da)
+        self._emit(data)
 
     def run(self):
         logger.info(f'{self.__class__.__name__} started for device {self.device.name}')
@@ -139,27 +163,9 @@ class IOThreadBase(threading.Thread):
         except:
             logger.exception(f'Exception occurred in task: {self.__class__.__name__}')
 
-    @abc.abstractmethod
-    def do_work(self):
-        pass
-
-
-class SimulateIOThread(IOThreadBase):
-
-    def __init__(
-        self,
-        cfg: DeviceConfig,
-        emit: TEmitter,
-    ):
-        super().__init__(cfg, emit)
-        self.number_of_channels = len(cfg.channels)
-
     def do_work(self):
         start = time.time()
+        sampling_interval = 1.0 / self.device.sampling_rate.m_as('Hz')
         while not self.cancel_event.is_set():
-            # data = np.random.uniform(size=self.number_of_channels)
-            data = np.random.normal(size=self.number_of_channels)
-            data += 3 * np.sin((time.time() - start) / 60.0 * 2 * np.pi)
-            data += 20.0
-            self.emit(data.copy(), units.degC)
-            time.sleep(1 / self.device.sampling_rate)
+            self.emit()
+            time.sleep(sampling_interval)

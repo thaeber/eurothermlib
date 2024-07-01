@@ -2,11 +2,13 @@ import logging
 import logging.config
 from datetime import datetime
 from ipaddress import IPv4Address
-from typing import List, Literal
+from typing import Annotated, List, Literal
 
 import serial
 from omegaconf import OmegaConf
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
+
+from .utils import TypedQuantity
 
 OmegaConf.register_new_resolver('now', lambda fmt: datetime.now().strftime(fmt))
 
@@ -28,11 +30,17 @@ class SerialPortConfig(BaseModel):
     baudRate: int = 19200
 
 
+Driver = Literal['simulate', 'model3208']
+
+
 class DeviceConfig(BaseModel):
+    name: str
     unitAddress: int = 1
     connection: SerialPortConfig = SerialPortConfig()
-    sampling_rate: float = 1.0  # [Hz]
-    simulate: bool = True
+    sampling_rate: Annotated[
+        TypedQuantity['1/[time]'], Field(validate_default=True)
+    ] = '1 Hz'
+    driver: Driver = 'simulate'
 
 
 class Config(BaseModel):
