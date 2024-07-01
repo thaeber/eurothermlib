@@ -8,8 +8,10 @@ from queue import Queue
 import grpc
 import xarray as xr
 from _collections_abc import AsyncIterator, Iterator
+from google.protobuf.timestamp_pb2 import Timestamp
 
-from ..configuration import ServerConfig
+from ..configuration import Config, ServerConfig
+from .acquisition import EurothermIO, TData
 from .proto import service_pb2, service_pb2_grpc
 
 _logger = logging.getLogger(__name__)
@@ -17,9 +19,10 @@ _logger = logging.getLogger(__name__)
 
 class EurothermServicer(service_pb2_grpc.EurothermServicer):
 
-    def __init__(self) -> None:
+    def __init__(self, cfg: Config) -> None:
         super().__init__()
         self.stop_event = threading.Event()
+        self.io = EurothermIO(cfg.devices)
 
     def StopServer(
         self,
@@ -52,7 +55,7 @@ class EurothermServicer(service_pb2_grpc.EurothermServicer):
         # place streamed values into a synchronized queue
         # (this works because the observable emits all values
         # on a different ThreadPool thread)
-        q = Queue[xr.DataArray]()
+        q = Queue[TData]()
         finished = threading.Event()
 
         def errored(e: Exception):
@@ -79,7 +82,15 @@ class EurothermServicer(service_pb2_grpc.EurothermServicer):
             while not cancel():
                 try:
                     da = q.get(timeout=5)
-                    response = service_pb2.Temperatures(pickledData=pickle.dumps(da))
+                    timestamp = Timestamp()
+                    timestamp.FromDatetime(da.timestamp)
+                    response = service_pb2.ProcessValues(
+                        timestamp=timestamp,
+                        processValue=da.processValue.m_as('K'),
+                        measuredValue=da.measuredValue.m_as('mV'),
+                        workingSetpoint=da.workingSetpoint.m_as('K'),
+                        workingOutput=da.workingOutput.m_as('%'),
+                    )
                     # _logger.info(f'Yielding at {timestamp}')
                     yield response
                 except EmptyError:
@@ -108,8 +119,10 @@ class EurothermClient:
             yield da
 
 
-def is_alive(cfg: ServerConfig):
+def is_alive(cfg: Config | ServerConfig):
     _logger.info('Checking server health.')
+    if isinstance(cfg, Config):
+        cfg = cfg.server
     client = connect(cfg)
     try:
         client.is_alive()
@@ -118,13 +131,13 @@ def is_alive(cfg: ServerConfig):
         return False
 
 
-def serve(cfg: ServerConfig):
+def serve(cfg: Config):
     executor = futures.ThreadPoolExecutor()
     server = grpc.server(executor)
-    servicer = EurothermServicer()
+    servicer = EurothermServicer(cfg)
     service_pb2_grpc.add_EurothermServicer_to_server(servicer, server)
 
-    server_address = f'{cfg.ip}:{cfg.port}'
+    server_address = f'{cfg.server.ip}:{cfg.server.port}'
     server.add_insecure_port(server_address)
 
     _logger.info(f'Starting TCLogger server at {server_address}')
@@ -146,7 +159,9 @@ def serve(cfg: ServerConfig):
     return executor.submit(wait_for_termination)
 
 
-def connect(cfg: ServerConfig):
+def connect(cfg: Config | ServerConfig):
+    if isinstance(cfg, Config):
+        cfg = cfg.server
     server_address = f'{cfg.ip}:{cfg.port}'
 
     _logger.info(f'Connecting client to server at {server_address}')
