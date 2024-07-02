@@ -4,11 +4,11 @@ from datetime import datetime
 from ipaddress import IPv4Address
 from os import PathLike
 from pathlib import Path
-from typing import Annotated, List, Literal, Optional
+from typing import Annotated, Any, Dict, List, Literal, Optional
 
 import serial
 from omegaconf import OmegaConf
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 from .utils import TypedQuantity
 
@@ -46,8 +46,10 @@ class DeviceConfig(BaseModel):
 
 
 class Config(BaseModel):
+    model_config = ConfigDict(extra='forbid')
     server: ServerConfig = ServerConfig()
     devices: List[DeviceConfig]
+    app_logging: Optional[Dict[str, Any]] = None
 
 
 # @dataclass

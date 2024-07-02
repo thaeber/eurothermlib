@@ -8,7 +8,7 @@ from omegaconf import OmegaConf
 from omegaconf.errors import ConfigAttributeError
 from rich.traceback import install
 
-from . import server
+from . import servicer
 from ..configuration import get_configuration
 from .file_logger import TCFileLogger
 
@@ -51,10 +51,10 @@ def start(ctx):
     logger.info('Starting server')
 
     cfg = get_configuration(cmd_args=ctx.args)
-    if server.is_alive(cfg.server):
+    if servicer.is_alive(cfg.server):
         logger.warning('Server is already running... do nothing.')
     else:
-        future = server.serve(cfg)
+        future = servicer.serve(cfg)
         try:
             while True:
                 _, not_done = futures.wait([future], timeout=2.0)
@@ -62,7 +62,7 @@ def start(ctx):
                     break
         except KeyboardInterrupt:
             logger.warning('Keyboard interrupt detected. Trying to stop server...')
-            client = server.connect(cfg.server)
+            client = servicer.connect(cfg.server)
             client.stop_server()
 
 
@@ -72,11 +72,11 @@ def stop(ctx):
     """Stops the server."""
     cfg = get_configuration(cmd_args=ctx.args)
 
-    if not server.is_alive(cfg.server):
+    if not servicer.is_alive(cfg.server):
         logger.warning('Server is not running... do nothing.')
     else:
         logger.info('Requesting server to stop.')
-        client = server.connect(cfg.server)
+        client = servicer.connect(cfg.server)
         client.stop_server()
 
 
@@ -90,11 +90,11 @@ def log(ctx):
     may be specified as log targets.
     """
     cfg = get_configuration(cmd_args=ctx.args)
-    if not server.is_alive(cfg.server):
+    if not servicer.is_alive(cfg.server):
         logger.warning('Server is not running!')
         return
 
-    client = server.connect(cfg.server)
+    client = servicer.connect(cfg.server)
     with TCFileLogger(client, cfg.logging) as file:
         file.log_header()
         with file.start_logging_temperatures():

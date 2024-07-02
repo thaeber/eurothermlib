@@ -3,14 +3,19 @@ from concurrent import futures
 
 import click
 
-from ..server import server
+from ..server import servicer
 from .cli import cli, get_configuration
 
 logger = logging.getLogger(__name__)
 
 
+@cli.group()
+def server():
+    pass
+
+
 # @cli.command(context_settings=_cs)
-@cli.command()
+@server.command()
 @click.pass_context
 def start(ctx):
     """Starts the server for acquiring thermocouple readings."""
@@ -18,10 +23,10 @@ def start(ctx):
 
     # cfg = get_configuration(cmd_args=ctx.args)
     cfg = get_configuration()
-    if server.is_alive(cfg.server):
+    if servicer.is_alive(cfg.server):
         logger.warning('Server is already running... do nothing.')
     else:
-        future = server.serve(cfg)
+        future = servicer.serve(cfg)
         try:
             while True:
                 _, not_done = futures.wait([future], timeout=2.0)
@@ -29,20 +34,20 @@ def start(ctx):
                     break
         except KeyboardInterrupt:
             logger.warning('Keyboard interrupt detected. Trying to stop server...')
-            client = server.connect(cfg.server)
+            client = servicer.connect(cfg.server)
             client.stop_server()
 
 
 # @cli.command(context_settings=_cs)
-@cli.command()
+@server.command()
 @click.pass_context
 def stop(ctx):
     """Stops the server."""
     cfg = get_configuration()
 
-    if not server.is_alive(cfg.server):
+    if not servicer.is_alive(cfg.server):
         logger.warning('Server is not running... do nothing.')
     else:
         logger.info('Requesting server to stop.')
-        client = server.connect(cfg.server)
+        client = servicer.connect(cfg.server)
         client.stop_server()

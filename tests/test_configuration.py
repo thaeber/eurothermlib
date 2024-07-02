@@ -66,3 +66,12 @@ class TestConfig:
         assert config.server.port == 11111
         assert config.devices[0].name == 'test'
         assert config.devices[0].sampling_rate == pint.Quantity('3.5Hz')
+
+    def test_get_configuration_with_app_logging(self):
+        filename = Path(__file__).parent / 'data' / '.eurotherm.app-logging.yaml'
+        config = get_configuration(filename=filename)
+
+        assert str(config.server.ip) == '127.0.10.1'
+        assert config.server.port == 50066
+        assert config.devices[0].name == 'my_reactor'
+        assert config.devices[0].sampling_rate == pint.Quantity('3.5Hz')

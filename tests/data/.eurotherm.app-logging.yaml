@@ -1,10 +1,10 @@
 server:
-  ip: 127.0.0.1
-  port: 50061
+  ip: 127.0.10.1
+  port: 50066
 
 devices:
-  - name: reactor
-    sampling_rate: 2Hz
+  - name: my_reactor
+    sampling_rate: 3.5Hz
 
 app_logging:
   version: 1
@@ -18,11 +18,11 @@ app_logging:
     console:
       class: rich.logging.RichHandler
       formatter: rich
-      markup: True
+      markup: False
     file:
       class: logging.FileHandler
       formatter: simple
-      filename: .eurotherm.log
+      filename: ./outputs/tclogger.log
       mode: a
   root:
     level: INFO
