@@ -1,15 +1,31 @@
 syntax = "proto3";
 option py_generic_services = true;
 
+import "google/protobuf/timestamp.proto";
+
 service Eurotherm {
     // Terminate/stop server.
     rpc StopServer(StopRequest) returns (Empty) {}
 
     // Does nothing. Used to check sever health.
     rpc ServerHealthCheck(Empty) returns (Empty) {}
+
+    // stream process values
+    rpc StreamProcessValues(StreamProcessValuesRequest) returns (stream ProcessValues) {}
 }
 
 message Empty {}
 
 message StopRequest {}
+
+message StreamProcessValuesRequest {}
+
+message ProcessValues {
+    string deviceName = 1;
+    google.protobuf.Timestamp timestamp = 2;
+    double processValue = 3;
+    double measuredValue = 4;
+    double workingSetpoint = 5;
+    double workingOutput = 6;
+}
 
