@@ -30,7 +30,7 @@ class EurothermServicer(service_pb2_grpc.EurothermServicer):
         context: grpc.ServicerContext,
     ) -> service_pb2.Empty:
         _logger.info('[Request] StopServer')
-        # self.io.complete()  # stop data acquisition
+        self.io.complete()  # stop data acquisition
         self.stop_event.set()
         return service_pb2.Empty()
 
@@ -82,17 +82,8 @@ class EurothermServicer(service_pb2_grpc.EurothermServicer):
             while not cancel():
                 try:
                     da = q.get(timeout=5)
-                    timestamp = Timestamp()
-                    timestamp.FromDatetime(da.timestamp)
-                    response = service_pb2.ProcessValues(
-                        timestamp=timestamp,
-                        processValue=da.processValue.m_as('K'),
-                        measuredValue=da.measuredValue.m_as('mV'),
-                        workingSetpoint=da.workingSetpoint.m_as('K'),
-                        workingOutput=da.workingOutput.m_as('%'),
-                    )
                     # _logger.info(f'Yielding at {timestamp}')
-                    yield response
+                    yield da.to_grpc_response()
                 except EmptyError:
                     pass
         finally:
@@ -115,8 +106,7 @@ class EurothermClient:
     def stream_process_values(self):
         request = service_pb2.StreamProcessValuesRequest()
         for response in self._client.StreamProcessValues(request):
-            da: xr.DataArray = pickle.loads(response.pickledData)
-            yield da
+            yield TData.from_grpc_response(response)
 
 
 def is_alive(cfg: Config | ServerConfig):

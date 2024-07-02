@@ -8,11 +8,13 @@ from typing import Callable, List, Optional
 
 import reactivex
 import reactivex.operators as op
+from google.protobuf.timestamp_pb2 import Timestamp
 from reactivex.scheduler import ThreadPoolScheduler
 
 from ..configuration import DeviceConfig
 from ..controller import EurothermController, EurothermSimulator
 from ..utils import DimensionlessQ, TemperatureQ, VoltageQ
+from .proto import service_pb2
 
 
 @dataclass
@@ -23,6 +25,30 @@ class TData:
     measuredValue: VoltageQ
     workingSetpoint: TemperatureQ
     workingOutput: DimensionlessQ
+
+    def to_grpc_response(self):
+        timestamp = Timestamp()
+        timestamp.FromDatetime(self.timestamp)
+        response = service_pb2.ProcessValues(
+            deviceName=self.deviceName,
+            timestamp=timestamp,
+            processValue=self.processValue.m_as('K'),
+            measuredValue=self.measuredValue.m_as('mV'),
+            workingSetpoint=self.workingSetpoint.m_as('K'),
+            workingOutput=self.workingOutput.m_as('%'),
+        )
+        return response
+
+    @staticmethod
+    def from_grpc_response(response: service_pb2.ProcessValues):
+        return TData(
+            deviceName=response.deviceName,
+            timestamp=response.timestamp.ToDatetime(),
+            processValue=TemperatureQ(response.processValue, 'K'),  # type: ignore
+            measuredValue=VoltageQ(response.processValue, 'mV'),  # type: ignore
+            workingSetpoint=TemperatureQ(response.workingSetpoint, 'K'),  # type: ignore
+            workingOutput=DimensionlessQ(response.workingOutput, '%'),  # type: ignore
+        )
 
 
 logger = logging.getLogger(__name__)

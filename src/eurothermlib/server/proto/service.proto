@@ -21,10 +21,11 @@ message StopRequest {}
 message StreamProcessValuesRequest {}
 
 message ProcessValues {
-    google.protobuf.Timestamp timestamp = 1;
-    double processValue = 2;
-    double measuredValue = 3;
-    double workingSetpoint = 4;
-    double workingOutput = 5;
+    string deviceName = 1;
+    google.protobuf.Timestamp timestamp = 2;
+    double processValue = 3;
+    double measuredValue = 4;
+    double workingSetpoint = 5;
+    double workingOutput = 6;
 }
 

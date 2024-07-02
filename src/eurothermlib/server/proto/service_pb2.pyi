@@ -49,11 +49,13 @@ global___StreamProcessValuesRequest = StreamProcessValuesRequest
 class ProcessValues(google.protobuf.message.Message):
     DESCRIPTOR: google.protobuf.descriptor.Descriptor
 
+    DEVICENAME_FIELD_NUMBER: builtins.int
     TIMESTAMP_FIELD_NUMBER: builtins.int
     PROCESSVALUE_FIELD_NUMBER: builtins.int
     MEASUREDVALUE_FIELD_NUMBER: builtins.int
     WORKINGSETPOINT_FIELD_NUMBER: builtins.int
     WORKINGOUTPUT_FIELD_NUMBER: builtins.int
+    deviceName: builtins.str
     processValue: builtins.float
     measuredValue: builtins.float
     workingSetpoint: builtins.float
@@ -63,6 +65,7 @@ class ProcessValues(google.protobuf.message.Message):
     def __init__(
         self,
         *,
+        deviceName: builtins.str = ...,
         timestamp: google.protobuf.timestamp_pb2.Timestamp | None = ...,
         processValue: builtins.float = ...,
         measuredValue: builtins.float = ...,
@@ -70,7 +73,7 @@ class ProcessValues(google.protobuf.message.Message):
         workingOutput: builtins.float = ...,
     ) -> None: ...
     def HasField(self, field_name: typing.Literal["timestamp", b"timestamp"]) -> builtins.bool: ...
-    def ClearField(self, field_name: typing.Literal["measuredValue", b"measuredValue", "processValue", b"processValue", "timestamp", b"timestamp", "workingOutput", b"workingOutput", "workingSetpoint", b"workingSetpoint"]) -> None: ...
+    def ClearField(self, field_name: typing.Literal["deviceName", b"deviceName", "measuredValue", b"measuredValue", "processValue", b"processValue", "timestamp", b"timestamp", "workingOutput", b"workingOutput", "workingSetpoint", b"workingSetpoint"]) -> None: ...
 
 global___ProcessValues = ProcessValues
 
