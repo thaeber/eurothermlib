@@ -2,7 +2,9 @@ import logging
 import logging.config
 from datetime import datetime
 from ipaddress import IPv4Address
-from typing import Annotated, List, Literal
+from os import PathLike
+from pathlib import Path
+from typing import Annotated, List, Literal, Optional
 
 import serial
 from omegaconf import OmegaConf
@@ -62,21 +64,15 @@ class Config(BaseModel):
 #     write_interval: float = 0.0  # [s]; write readings in groups at given interval
 
 
-# def get_configuration(
-#     cmd_args: Optional[List[str]] = None,
-#     filename='./conf/tclogger.yaml',
-#     use_cli=False,
-# ) -> TCLoggerConfig:
-#     cfg: DictConfig = OmegaConf.structured(TCLoggerConfig)
-#     try:
-#         if Path(filename).exists():
-#             cfg.merge_with(OmegaConf.load(filename))
-#         if use_cli:
-#             cfg.merge_with_cli()
-#         if cmd_args is not None:
-#             cfg.merge_with_dotlist(cmd_args)
-#     except ConfigAttributeError as ex:
-#         logger.critical("Invalid configuration option.", exc_info=ex)
-#         raise ex
+def get_configuration(
+    cmd_args: Optional[List[str]] = None,
+    filename: str | PathLike = '.eurotherm.yaml',
+    use_cli=False,
+):
+    cfg = OmegaConf.load(Path(filename))
+    if use_cli:
+        cfg.merge_with_cli()
+    if cmd_args is not None:
+        cfg.merge_with_dotlist(cmd_args)
 
-#     return cfg  # type: ignore
+    return Config.model_validate(OmegaConf.to_container(cfg, resolve=True))

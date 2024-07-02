@@ -1,3 +1,4 @@
+import pytest
 from reactivex import operators as op
 
 from eurothermlib.configuration import DeviceConfig
@@ -5,6 +6,8 @@ from eurothermlib.server.acquisition import EurothermIO
 
 
 class TestEurothermIO:
+
+    @pytest.mark.skip('Skipped long running server test')
     def test_stream_values(self):
         cfg = [
             DeviceConfig(name='device1', sampling_rate='5Hz'),

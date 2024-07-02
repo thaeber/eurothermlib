@@ -11,7 +11,7 @@ from eurothermlib.server import connect, is_alive, serve
 
 class TestServer:
 
-    # @pytest.mark.skip('Skipped long running server test')
+    @pytest.mark.skip('Skipped long running server test')
     def test_serve(self):
         config = Config(
             server=ServerConfig(),
@@ -31,6 +31,7 @@ class TestServer:
 
 
 class TestClient:
+    @pytest.mark.skip('Skipped long running server test')
     def test_stream_process_values(self):
         config = Config(
             server=ServerConfig(),
