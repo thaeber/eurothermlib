@@ -30,6 +30,7 @@ class ServerConfig(BaseModel):
 class SerialPortConfig(BaseModel):
     port: str = 'COM1'
     baudRate: int = 19200
+    simulate: bool = False
 
 
 Driver = Literal['simulate', 'model3208']
