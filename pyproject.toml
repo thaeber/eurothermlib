@@ -8,8 +8,8 @@ packages = [
     { include = "eurothermlib", from = "src" },
 ]
 
-# [tool.poetry.scripts]
-# mfc = 'mfclib.cli:safe_cli'
+[tool.poetry.scripts]
+eurotherm = 'eurothermlib.cli.cli:cli'
 
 [tool.poetry.dependencies]
 python = ">=3.10,<3.12"

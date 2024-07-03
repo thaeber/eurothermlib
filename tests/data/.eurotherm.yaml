@@ -1,0 +1,7 @@
+server:
+  ip: 127.0.10.1
+  port: 50066
+
+devices:
+  - name: my_reactor
+    sampling_rate: 3.5Hz

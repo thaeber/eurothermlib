@@ -1,0 +1,32 @@
+server:
+  ip: 127.0.0.1
+  port: 50061
+
+devices:
+  - name: reactor
+    sampling_rate: 2Hz
+
+app_logging:
+  version: 1
+  formatters:
+    simple:
+      format: "[%(asctime)s][%(levelname)s][%(thread)s][%(filename)s:%(lineno)d] - %(message)s"
+      datefmt: "%Y-%m-%d %H:%M:%S"
+    rich:
+      format: "[%(thread)s] %(message)s"
+  handlers:
+    console:
+      class: rich.logging.RichHandler
+      formatter: rich
+      markup: True
+    file:
+      class: logging.FileHandler
+      formatter: simple
+      filename: .eurotherm.log
+      mode: a
+  root:
+    level: INFO
+    handlers:
+      - console
+      - file
+  disable_existing_loggers: false

@@ -1,3 +1,5 @@
+from pathlib import Path
+
 import pint
 
 from eurothermlib.configuration import (
@@ -5,6 +7,7 @@ from eurothermlib.configuration import (
     DeviceConfig,
     SerialPortConfig,
     ServerConfig,
+    get_configuration,
 )
 
 
@@ -43,3 +46,32 @@ class TestDeviceConfig:
 class TestConfig:
     def test_create_instance(self):
         config = Config(devices=[])
+
+    def test_get_configuration(self):
+        filename = Path(__file__).parent / 'data' / '.eurotherm.yaml'
+        config = get_configuration(filename=filename)
+
+        assert str(config.server.ip) == '127.0.10.1'
+        assert config.server.port == 50066
+        assert config.devices[0].name == 'my_reactor'
+        assert config.devices[0].sampling_rate == pint.Quantity('3.5Hz')
+
+    def test_get_configuration_with_dotlist(self):
+        filename = Path(__file__).parent / 'data' / '.eurotherm.yaml'
+        config = get_configuration(
+            filename=filename, cmd_args=['server.port=11111', 'devices[0].name=test']
+        )
+
+        assert str(config.server.ip) == '127.0.10.1'
+        assert config.server.port == 11111
+        assert config.devices[0].name == 'test'
+        assert config.devices[0].sampling_rate == pint.Quantity('3.5Hz')
+
+    def test_get_configuration_with_app_logging(self):
+        filename = Path(__file__).parent / 'data' / '.eurotherm.app-logging.yaml'
+        config = get_configuration(filename=filename)
+
+        assert str(config.server.ip) == '127.0.10.1'
+        assert config.server.port == 50066
+        assert config.devices[0].name == 'my_reactor'
+        assert config.devices[0].sampling_rate == pint.Quantity('3.5Hz')
