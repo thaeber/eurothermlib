@@ -45,7 +45,7 @@ class TestDeviceConfig:
 
 class TestConfig:
     def test_create_instance(self):
-        config = Config(devices=[])
+        Config(devices=[])
 
     def test_get_configuration(self):
         filename = Path(__file__).parent / 'data' / '.eurotherm.yaml'

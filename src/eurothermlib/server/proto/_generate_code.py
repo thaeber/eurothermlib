@@ -7,7 +7,10 @@ proto_path = Path(__file__).parent / 'service.proto'
 os.chdir(proto_path.parent)
 
 res = subprocess.call(
-    rf'python -m grpc_tools.protoc -I . --python_out=. --grpc_python_out=. --mypy_out=. --mypy_grpc_out=. {proto_path.name}',
+    (
+        rf'python -m grpc_tools.protoc -I . --python_out=. '
+        rf'--grpc_python_out=. --mypy_out=. --mypy_grpc_out=. {proto_path.name}'
+    ),
     shell=True,
 )
 print(f'Exit code: {res}')

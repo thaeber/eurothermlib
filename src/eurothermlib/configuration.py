@@ -6,11 +6,10 @@ from os import PathLike
 from pathlib import Path
 from typing import Annotated, Any, Dict, List, Literal, Optional
 
-import serial
 from omegaconf import OmegaConf
 from pydantic import BaseModel, ConfigDict, Field
 
-from .utils import TypedQuantity
+from .utils import FrequencyQ
 
 OmegaConf.register_new_resolver('now', lambda fmt: datetime.now().strftime(fmt))
 
@@ -32,16 +31,14 @@ class SerialPortConfig(BaseModel):
     baudRate: int = 19200
 
 
-Driver = Literal['simulate', 'model3208']
+Driver = Literal['simulate', 'generic', 'model3208']
 
 
 class DeviceConfig(BaseModel):
     name: str
     unitAddress: int = 1
     connection: SerialPortConfig = SerialPortConfig()
-    sampling_rate: Annotated[
-        TypedQuantity['1/[time]'], Field(validate_default=True)
-    ] = '1 Hz'
+    sampling_rate: Annotated[FrequencyQ, Field(validate_default=True)] = '1 Hz'
     driver: Driver = 'simulate'
 
 

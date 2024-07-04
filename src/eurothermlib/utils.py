@@ -4,7 +4,7 @@ import tokenize
 from typing import Any, ClassVar, Type, TypeAlias
 
 import pint
-from pydantic import BaseModel, GetCoreSchemaHandler
+from pydantic import GetCoreSchemaHandler
 from pydantic_core import CoreSchema, core_schema
 
 
@@ -102,5 +102,7 @@ class TypedQuantity(pint.Quantity):
 VoltageQ: TypeAlias = TypedQuantity['[electric_potential]']
 TemperatureQ: TypeAlias = TypedQuantity['[temperature]']
 DimensionlessQ: TypeAlias = TypedQuantity['[]']
+FrequencyQ: TypeAlias = TypedQuantity['1/[time]']
+TimeQ: TypeAlias = TypedQuantity['[time]']
 
 # %%
