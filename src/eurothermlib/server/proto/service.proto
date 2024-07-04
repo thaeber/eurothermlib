@@ -28,4 +28,3 @@ message ProcessValues {
     double workingSetpoint = 5;
     double workingOutput = 6;
 }
-

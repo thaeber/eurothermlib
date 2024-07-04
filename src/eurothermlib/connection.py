@@ -1,5 +1,4 @@
 from concurrent import futures
-from dataclasses import dataclass
 import logging
 from .configuration import SerialPortConfig
 from pymodbus.client import ModbusSerialClient
@@ -29,7 +28,10 @@ class ModbusSerial:
         self, unit_address: int, register_address: int, count: int
     ):
         logger.debug(
-            f'Read holding register(s): unit={unit_address}, register={register_address}, count={count}'
+            (
+                f'Read holding register(s): unit={unit_address},'
+                f'register={register_address}, count={count}'
+            )
         )
         return self.client.read_holding_registers(
             address=register_address,

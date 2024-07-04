@@ -65,7 +65,6 @@ class SingletonMeta(ABCMeta):
 
 
 class EurothermIO(metaclass=SingletonMeta):
-
     def __init__(self, cfg: List[DeviceConfig]) -> None:
         super().__init__()
         self.cfg = cfg
@@ -108,7 +107,10 @@ class EurothermIO(metaclass=SingletonMeta):
                         self._threads.append(thread)
                     except ValueError:
                         logger.warning(
-                            f'Could not start acquisition thread for device: {device.name}'
+                            (
+                                f'Could not start acquisition thread '
+                                f'for device: {device.name}'
+                            )
                         )
             else:
                 logger.debug('Acquisition threads already running.')
@@ -133,7 +135,6 @@ class EurothermIO(metaclass=SingletonMeta):
 
 
 class IOThreadBase(threading.Thread):
-
     def __init__(
         self,
         device: DeviceConfig,
@@ -186,11 +187,11 @@ class IOThreadBase(threading.Thread):
         # do actual work
         try:
             self.do_work()
-        except:
+        except Exception:
             logger.exception(f'Exception occurred in task: {self.__class__.__name__}')
 
     def do_work(self):
-        start = time.time()
+        time.time()
         sampling_interval = 1.0 / self.device.sampling_rate.m_as('Hz')
         while not self.cancel_event.is_set():
             self.emit()

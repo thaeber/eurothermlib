@@ -1,14 +1,11 @@
 import logging
-import pickle
 import threading
 from concurrent import futures
 from queue import Empty as EmptyError
 from queue import Queue
 
 import grpc
-import xarray as xr
 from _collections_abc import AsyncIterator, Iterator
-from google.protobuf.timestamp_pb2 import Timestamp
 
 from ..configuration import Config, ServerConfig
 from .acquisition import EurothermIO, TData
@@ -18,7 +15,6 @@ _logger = logging.getLogger(__name__)
 
 
 class EurothermServicer(service_pb2_grpc.EurothermServicer):
-
     def __init__(self, cfg: Config) -> None:
         super().__init__()
         self.stop_event = threading.Event()
@@ -93,7 +89,6 @@ class EurothermServicer(service_pb2_grpc.EurothermServicer):
 
 
 class EurothermClient:
-
     def __init__(self, channel: grpc.Channel) -> None:
         self._client = service_pb2_grpc.EurothermStub(channel)
 
@@ -142,9 +137,9 @@ def serve(cfg: Config):
         token.wait(30.0)
 
         if not token.is_set():
-            _logger.error(f'Server did not terminate')
+            _logger.error('Server did not terminate')
         else:
-            _logger.info(f'Server stopped')
+            _logger.info('Server stopped')
 
     return executor.submit(wait_for_termination)
 

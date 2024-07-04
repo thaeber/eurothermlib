@@ -6,7 +6,6 @@ from eurothermlib.server.acquisition import EurothermIO
 
 
 class TestEurothermIO:
-
     @pytest.mark.slow
     def test_stream_values(self):
         cfg = [

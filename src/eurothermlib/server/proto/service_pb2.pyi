@@ -72,8 +72,26 @@ class ProcessValues(google.protobuf.message.Message):
         workingSetpoint: builtins.float = ...,
         workingOutput: builtins.float = ...,
     ) -> None: ...
-    def HasField(self, field_name: typing.Literal["timestamp", b"timestamp"]) -> builtins.bool: ...
-    def ClearField(self, field_name: typing.Literal["deviceName", b"deviceName", "measuredValue", b"measuredValue", "processValue", b"processValue", "timestamp", b"timestamp", "workingOutput", b"workingOutput", "workingSetpoint", b"workingSetpoint"]) -> None: ...
+    def HasField(
+        self, field_name: typing.Literal["timestamp", b"timestamp"]
+    ) -> builtins.bool: ...
+    def ClearField(
+        self,
+        field_name: typing.Literal[
+            "deviceName",
+            b"deviceName",
+            "measuredValue",
+            b"measuredValue",
+            "processValue",
+            b"processValue",
+            "timestamp",
+            b"timestamp",
+            "workingOutput",
+            b"workingOutput",
+            "workingSetpoint",
+            b"workingSetpoint",
+        ],
+    ) -> None: ...
 
 global___ProcessValues = ProcessValues
 
@@ -87,7 +105,6 @@ class Eurotherm(google.protobuf.service.Service, metaclass=abc.ABCMeta):
         callback: collections.abc.Callable[[global___Empty], None] | None,
     ) -> concurrent.futures.Future[global___Empty]:
         """Terminate/stop server."""
-
     @abc.abstractmethod
     def ServerHealthCheck(
         inst: Eurotherm,  # pyright: ignore[reportSelfClsParameterName]
@@ -96,7 +113,6 @@ class Eurotherm(google.protobuf.service.Service, metaclass=abc.ABCMeta):
         callback: collections.abc.Callable[[global___Empty], None] | None,
     ) -> concurrent.futures.Future[global___Empty]:
         """Does nothing. Used to check sever health."""
-
     @abc.abstractmethod
     def StreamProcessValues(
         inst: Eurotherm,  # pyright: ignore[reportSelfClsParameterName]
@@ -116,7 +132,6 @@ class Eurotherm_Stub(Eurotherm):
         callback: collections.abc.Callable[[global___Empty], None] | None = ...,
     ) -> concurrent.futures.Future[global___Empty]:
         """Terminate/stop server."""
-
     def ServerHealthCheck(
         inst: Eurotherm_Stub,  # pyright: ignore[reportSelfClsParameterName]
         rpc_controller: google.protobuf.service.RpcController,
@@ -124,7 +139,6 @@ class Eurotherm_Stub(Eurotherm):
         callback: collections.abc.Callable[[global___Empty], None] | None = ...,
     ) -> concurrent.futures.Future[global___Empty]:
         """Does nothing. Used to check sever health."""
-
     def StreamProcessValues(
         inst: Eurotherm_Stub,  # pyright: ignore[reportSelfClsParameterName]
         rpc_controller: google.protobuf.service.RpcController,

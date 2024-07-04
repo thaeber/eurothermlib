@@ -1,8 +1,4 @@
-import itertools
-
 import pytest
-import reactivex as rx
-from reactivex import operators as op
 from toolz.curried import pipe, take
 
 from eurothermlib.configuration import Config, DeviceConfig, ServerConfig
@@ -10,7 +6,6 @@ from eurothermlib.server import connect, is_alive, serve
 
 
 class TestServer:
-
     @pytest.mark.slow
     def test_serve(self):
         config = Config(
@@ -54,6 +49,5 @@ class TestClient:
             assert isinstance(data, list)
             assert len(data) == 10
 
-            # data = rx.from_iterable(client.stream_process_values()).pipe(op.take(10)).run()
         finally:
             client.stop_server()

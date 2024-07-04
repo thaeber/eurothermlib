@@ -3,11 +3,10 @@ from datetime import datetime
 import logging
 import struct
 from abc import ABC, abstractmethod
-from enum import IntEnum, IntFlag, auto
+from enum import IntEnum, IntFlag
 from typing import cast
 
 import numpy as np
-import pint
 import tenacity
 from pymodbus import ModbusException
 from serial import Serial
@@ -68,7 +67,6 @@ class EurothermController(ABC):
     def working_output(self) -> DimensionlessQ:
         pass
 
-    @abstractmethod
     def status(self) -> InstrumentStatus:
         return InstrumentStatus.NONE
 

@@ -16,4 +16,3 @@ server:
 
 #   # timing
 #   write_interval: 5.0 # [s]; write readings in groups at given interval
-
