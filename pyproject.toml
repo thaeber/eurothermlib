@@ -23,6 +23,7 @@ pydantic = "^2.7.4"
 xarray = "^2024.6.0"
 reactivex = "^4.0.4"
 pymodbus = {extras = ["serial"], version = "^3.6.9"}
+tenacity = "^8.4.2"
 
 
 [tool.poetry.group.dev.dependencies]
