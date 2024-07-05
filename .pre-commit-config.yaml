@@ -1,7 +1,9 @@
 # exclude: "^pint/_vendor"
 exclude: |
       (?x)^(
+          .*/service_pb2_grpc.py|
           .*/service_pb2_grpc.pyi|
+          .*/service_pb2.py|
           .*/service_pb2.pyi|
       )$
 repos:

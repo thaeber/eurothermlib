@@ -1,5 +1,4 @@
 from datetime import datetime
-import pint
 import pytest
 from reactivex import operators as op
 

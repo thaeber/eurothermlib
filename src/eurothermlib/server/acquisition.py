@@ -174,7 +174,6 @@ class IOThreadBase(threading.Thread):
                 return
 
     def emit(self):
-        controller = self.controller
         values = self.controller.get_process_values()
         data = TData(
             deviceName=self.device.name,
