@@ -24,7 +24,8 @@ message ProcessValues {
     string deviceName = 1;
     google.protobuf.Timestamp timestamp = 2;
     double processValue = 3;
-    double measuredValue = 4;
+    double setpoint = 4;
     double workingSetpoint = 5;
     double workingOutput = 6;
+    int32 status = 7;
 }

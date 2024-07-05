@@ -12,8 +12,8 @@ from google.protobuf.timestamp_pb2 import Timestamp
 from reactivex.scheduler import ThreadPoolScheduler
 
 from ..configuration import DeviceConfig
-from ..controllers import EurothermController, EurothermSimulator
-from ..utils import DimensionlessQ, TemperatureQ, VoltageQ
+from ..controllers import EurothermController, EurothermSimulator, InstrumentStatus
+from ..utils import DimensionlessQ, TemperatureQ
 from .proto import service_pb2
 
 
@@ -22,9 +22,10 @@ class TData:
     deviceName: str
     timestamp: datetime
     processValue: TemperatureQ
-    measuredValue: VoltageQ
+    setpoint: TemperatureQ
     workingSetpoint: TemperatureQ
     workingOutput: DimensionlessQ
+    status: InstrumentStatus
 
     def to_grpc_response(self):
         timestamp = Timestamp()
@@ -33,9 +34,10 @@ class TData:
             deviceName=self.deviceName,
             timestamp=timestamp,
             processValue=self.processValue.m_as('K'),
-            measuredValue=self.measuredValue.m_as('mV'),
+            setpoint=self.setpoint.m_as('K'),
             workingSetpoint=self.workingSetpoint.m_as('K'),
             workingOutput=self.workingOutput.m_as('%'),
+            status=int(self.status),
         )
         return response
 
@@ -45,9 +47,10 @@ class TData:
             deviceName=response.deviceName,
             timestamp=response.timestamp.ToDatetime(),
             processValue=TemperatureQ(response.processValue, 'K'),  # type: ignore
-            measuredValue=VoltageQ(response.processValue, 'mV'),  # type: ignore
+            setpoint=TemperatureQ(response.setpoint, 'K'),  # type: ignore
             workingSetpoint=TemperatureQ(response.workingSetpoint, 'K'),  # type: ignore
             workingOutput=DimensionlessQ(response.workingOutput, '%'),  # type: ignore
+            status=response.status,
         )
 
 
@@ -172,13 +175,15 @@ class IOThreadBase(threading.Thread):
 
     def emit(self):
         controller = self.controller
+        values = self.controller.get_process_values()
         data = TData(
             deviceName=self.device.name,
-            timestamp=datetime.now(),
-            processValue=controller.process_value,
-            measuredValue=controller.measured_value,
-            workingSetpoint=controller.working_setpoint,
-            workingOutput=controller.working_output,
+            timestamp=values.timestamp,
+            processValue=values.processValue,
+            setpoint=values.setpoint,
+            workingSetpoint=values.workingSetpoint,
+            workingOutput=values.workingOutput,
+            status=values.status,
         )
         self._emit(data)
 

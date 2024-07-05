@@ -66,6 +66,7 @@ class EurothermController(ABC):
     def working_output(self) -> DimensionlessQ:
         pass
 
+    @property
     def status(self) -> InstrumentStatus:
         return InstrumentStatus.NONE
 
