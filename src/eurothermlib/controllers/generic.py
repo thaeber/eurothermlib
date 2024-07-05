@@ -1,130 +1,17 @@
-from dataclasses import dataclass
-from datetime import datetime
 import logging
 import struct
-from abc import ABC, abstractmethod
-from enum import IntEnum, IntFlag
-from typing import cast
+from datetime import datetime
+from enum import IntEnum
 
-import numpy as np
 import tenacity
 from pymodbus import ModbusException
-from serial import Serial
 
-from .configuration import DeviceConfig
-from .connection import ModbusSerial
-from .utils import DimensionlessQ, TemperatureQ, VoltageQ
+from ..utils import DimensionlessQ, TemperatureQ, VoltageQ
+from .connection import ModbusSerialConnection
+from .controller import EurothermController, InstrumentStatus, ProcessValues
 
 # ureg = pint.application_registry.get()
 logger = logging.getLogger(__name__)
-
-
-class InstrumentStatus(IntFlag):
-    NONE = 0x00
-    Alarm1 = 0x0001
-    Alarm2 = 0x0002
-    Alarm3 = 0x0004
-    Alarm4 = 0x0008
-    SensorBreak = 0x0020
-    LoopBreak = 0x0040
-    HeaterFail = 0x0080
-    LoadFail = 0x0100
-    ProgramEnd = 0x0200
-    PVOutOfRange = 0x0400
-    NewAlarm = 0x1000
-    TimerRampRunning = 0x2000
-    RemoteSPFail = 0x4000
-
-
-@dataclass
-class ProcessValues:
-    timestamp: datetime
-    processValue: TemperatureQ
-    setpoint: TemperatureQ
-    workingSetpoint: TemperatureQ
-    workingOutput: DimensionlessQ
-    status: InstrumentStatus
-
-
-class EurothermController(ABC):
-    @property
-    @abstractmethod
-    def process_value(self) -> TemperatureQ:
-        pass
-
-    @property
-    @abstractmethod
-    def measured_value(self) -> VoltageQ:
-        pass
-
-    @property
-    @abstractmethod
-    def working_setpoint(self) -> TemperatureQ:
-        pass
-
-    @property
-    @abstractmethod
-    def working_output(self) -> DimensionlessQ:
-        pass
-
-    def status(self) -> InstrumentStatus:
-        return InstrumentStatus.NONE
-
-    @abstractmethod
-    def get_process_values(self) -> ProcessValues:
-        pass
-
-
-class EurothermSimulator(EurothermController):
-    def __init__(self):
-        self._process_value = TemperatureQ(20, 'degC')
-        self._setpoint = self._process_value
-
-    @property
-    def process_value(self):
-        return cast(TemperatureQ, self._process_value)
-
-    @property
-    def measured_value(self):
-        T = self._process_value.m_as('degC')
-
-        # thermo voltage of Type K thermocouple [T (°C), U (mV)]
-        type_k_data = np.array(
-            [
-                [0, 0],
-                [100, 4.096],
-                [200, 8.138],
-                [300, 12.209],
-                [400, 16.397],
-                [500, 20.644],
-                [600, 24.905],
-                [700, 29.129],
-                [800, 33.275],
-                [900, 37.326],
-                [1000, 41.276],
-                [1100, 45.119],
-                [1200, 48.838],
-                [1250, 50.644],
-                [1300, 52.410],
-            ]
-        )
-        voltage = np.interp(T, *type_k_data.T)
-        return cast(VoltageQ, VoltageQ(voltage, 'mV'))
-
-    @property
-    def working_setpoint(self) -> TemperatureQ:
-        return cast(TemperatureQ, self._setpoint)
-
-    @property
-    def working_output(self):
-        return DimensionlessQ(0.0, '%')
-
-    def get_process_values(self) -> ProcessValues:
-        pass
-
-
-def _log_attemp_number(retry_state):
-    logging.error(f"Retrying: {retry_state.attempt_number}...")
 
 
 class GenericAddress(IntEnum):
@@ -140,20 +27,19 @@ class GenericAddress(IntEnum):
 
 
 class GenericEurothermController(EurothermController):
-    def __init__(self, device: DeviceConfig):
-        self.device = device
-        self.connection = ModbusSerial(device.connection)
+    def __init__(self, unit_address: int, connection: ModbusSerialConnection):
+        self.unit_address = unit_address
+        self.connection = connection
 
     @tenacity.retry(
         reraise=True,
         stop=tenacity.stop_after_attempt(3),
         before_sleep=tenacity.before_sleep_log(logger, logging.WARN),
-        # after=_log_attemp_number,
     )
     def _read_int_registers(self, address, num_registers=1):
         try:
             response = self.connection.read_holding_registers(
-                self.device.unitAddress,
+                self.unit_address,
                 address,
                 num_registers,
             ).result()
@@ -181,6 +67,10 @@ class GenericEurothermController(EurothermController):
     @property
     def measured_value(self) -> VoltageQ:
         return VoltageQ(self._read_float_registers(GenericAddress.MVIN)[0], 'mV')
+
+    @property
+    def setpoint(self) -> TemperatureQ:
+        return TemperatureQ(self._read_float_registers(GenericAddress.TGSP)[0], '°C')
 
     @property
     def working_setpoint(self) -> TemperatureQ:
@@ -242,8 +132,3 @@ class GenericEurothermController(EurothermController):
             workingOutput=DimensionlessQ(registers[GenericAddress.WRKOP - 1], '%'),
             status=self.status,
         )
-
-
-class EurothermModel3208(GenericEurothermController):
-    def __init__(self, port: Serial):
-        pass

@@ -12,7 +12,7 @@ from google.protobuf.timestamp_pb2 import Timestamp
 from reactivex.scheduler import ThreadPoolScheduler
 
 from ..configuration import DeviceConfig
-from ..controller import EurothermController, EurothermSimulator
+from ..controllers import EurothermController, EurothermSimulator
 from ..utils import DimensionlessQ, TemperatureQ, VoltageQ
 from .proto import service_pb2
 

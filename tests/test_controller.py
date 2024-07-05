@@ -1,6 +1,6 @@
 import pint
 
-from eurothermlib.controller import EurothermSimulator
+from eurothermlib.controllers import EurothermSimulator
 
 
 class TestEurothermSimulator:

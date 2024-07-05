@@ -1,12 +1,12 @@
 from concurrent import futures
 import logging
-from .configuration import SerialPortConfig
+from ..configuration import SerialPortConfig
 from pymodbus.client import ModbusSerialClient
 
 logger = logging.getLogger(__name__)
 
 
-class ModbusSerial:
+class ModbusSerialConnection:
     __connections__ = {}
 
     def __init__(self, cfg: SerialPortConfig):
@@ -14,11 +14,11 @@ class ModbusSerial:
         self.executor = futures.ThreadPoolExecutor(max_workers=1)
 
     def __new__(cls, cfg: SerialPortConfig):
-        if cfg.port in ModbusSerial.__connections__:
-            return ModbusSerial.__connections__[cfg.port]
+        if cfg.port in ModbusSerialConnection.__connections__:
+            return ModbusSerialConnection.__connections__[cfg.port]
         else:
             instance = super().__new__(cls)
-            ModbusSerial.__connections__[cfg.port] = instance
+            ModbusSerialConnection.__connections__[cfg.port] = instance
             return instance
 
     def close(self):
