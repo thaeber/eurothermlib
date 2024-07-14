@@ -8,12 +8,34 @@ import builtins
 import collections.abc
 import concurrent.futures
 import google.protobuf.descriptor
+import google.protobuf.internal.enum_type_wrapper
 import google.protobuf.message
 import google.protobuf.service
 import google.protobuf.timestamp_pb2
+import sys
 import typing
 
+if sys.version_info >= (3, 10):
+    import typing as typing_extensions
+else:
+    import typing_extensions
+
 DESCRIPTOR: google.protobuf.descriptor.FileDescriptor
+
+class _RemoteSetpointState:
+    ValueType = typing.NewType("ValueType", builtins.int)
+    V: typing_extensions.TypeAlias = ValueType
+
+class _RemoteSetpointStateEnumTypeWrapper(google.protobuf.internal.enum_type_wrapper._EnumTypeWrapper[_RemoteSetpointState.ValueType], builtins.type):
+    DESCRIPTOR: google.protobuf.descriptor.EnumDescriptor
+    DISABLED: _RemoteSetpointState.ValueType  # 0
+    ENABLED: _RemoteSetpointState.ValueType  # 1
+
+class RemoteSetpointState(_RemoteSetpointState, metaclass=_RemoteSetpointStateEnumTypeWrapper): ...
+
+DISABLED: RemoteSetpointState.ValueType  # 0
+ENABLED: RemoteSetpointState.ValueType  # 1
+global___RemoteSetpointState = RemoteSetpointState
 
 @typing.final
 class Empty(google.protobuf.message.Message):
@@ -44,6 +66,21 @@ class StreamProcessValuesRequest(google.protobuf.message.Message):
     ) -> None: ...
 
 global___StreamProcessValuesRequest = StreamProcessValuesRequest
+
+@typing.final
+class GetProcessValuesRequest(google.protobuf.message.Message):
+    DESCRIPTOR: google.protobuf.descriptor.Descriptor
+
+    DEVICENAME_FIELD_NUMBER: builtins.int
+    deviceName: builtins.str
+    def __init__(
+        self,
+        *,
+        deviceName: builtins.str = ...,
+    ) -> None: ...
+    def ClearField(self, field_name: typing.Literal["deviceName", b"deviceName"]) -> None: ...
+
+global___GetProcessValuesRequest = GetProcessValuesRequest
 
 @typing.final
 class ProcessValues(google.protobuf.message.Message):
@@ -80,6 +117,39 @@ class ProcessValues(google.protobuf.message.Message):
 
 global___ProcessValues = ProcessValues
 
+@typing.final
+class SelectRemoteSetpointRequest(google.protobuf.message.Message):
+    DESCRIPTOR: google.protobuf.descriptor.Descriptor
+
+    DEVICENAME_FIELD_NUMBER: builtins.int
+    STATE_FIELD_NUMBER: builtins.int
+    deviceName: builtins.str
+    state: global___RemoteSetpointState.ValueType
+    def __init__(
+        self,
+        *,
+        deviceName: builtins.str = ...,
+        state: global___RemoteSetpointState.ValueType = ...,
+    ) -> None: ...
+    def ClearField(self, field_name: typing.Literal["deviceName", b"deviceName", "state", b"state"]) -> None: ...
+
+global___SelectRemoteSetpointRequest = SelectRemoteSetpointRequest
+
+@typing.final
+class AcknowlegdeAllAlarmsRequest(google.protobuf.message.Message):
+    DESCRIPTOR: google.protobuf.descriptor.Descriptor
+
+    DEVICENAME_FIELD_NUMBER: builtins.int
+    deviceName: builtins.str
+    def __init__(
+        self,
+        *,
+        deviceName: builtins.str = ...,
+    ) -> None: ...
+    def ClearField(self, field_name: typing.Literal["deviceName", b"deviceName"]) -> None: ...
+
+global___AcknowlegdeAllAlarmsRequest = AcknowlegdeAllAlarmsRequest
+
 class Eurotherm(google.protobuf.service.Service, metaclass=abc.ABCMeta):
     DESCRIPTOR: google.protobuf.descriptor.ServiceDescriptor
     @abc.abstractmethod
@@ -109,6 +179,33 @@ class Eurotherm(google.protobuf.service.Service, metaclass=abc.ABCMeta):
     ) -> concurrent.futures.Future[global___ProcessValues]:
         """stream process values"""
 
+    @abc.abstractmethod
+    def GetProcessValues(
+        inst: Eurotherm,  # pyright: ignore[reportSelfClsParameterName]
+        rpc_controller: google.protobuf.service.RpcController,
+        request: global___GetProcessValuesRequest,
+        callback: collections.abc.Callable[[global___ProcessValues], None] | None,
+    ) -> concurrent.futures.Future[global___ProcessValues]:
+        """current process values"""
+
+    @abc.abstractmethod
+    def SelectRemoteSetpoint(
+        inst: Eurotherm,  # pyright: ignore[reportSelfClsParameterName]
+        rpc_controller: google.protobuf.service.RpcController,
+        request: global___SelectRemoteSetpointRequest,
+        callback: collections.abc.Callable[[global___Empty], None] | None,
+    ) -> concurrent.futures.Future[global___Empty]:
+        """enable/disable remote setpoint"""
+
+    @abc.abstractmethod
+    def AcknowledgeAllAlarms(
+        inst: Eurotherm,  # pyright: ignore[reportSelfClsParameterName]
+        rpc_controller: google.protobuf.service.RpcController,
+        request: global___AcknowlegdeAllAlarmsRequest,
+        callback: collections.abc.Callable[[global___Empty], None] | None,
+    ) -> concurrent.futures.Future[global___Empty]:
+        """acknowledge all alarms"""
+
 class Eurotherm_Stub(Eurotherm):
     def __init__(self, rpc_channel: google.protobuf.service.RpcChannel) -> None: ...
     DESCRIPTOR: google.protobuf.descriptor.ServiceDescriptor
@@ -135,3 +232,27 @@ class Eurotherm_Stub(Eurotherm):
         callback: collections.abc.Callable[[global___ProcessValues], None] | None = ...,
     ) -> concurrent.futures.Future[global___ProcessValues]:
         """stream process values"""
+
+    def GetProcessValues(
+        inst: Eurotherm_Stub,  # pyright: ignore[reportSelfClsParameterName]
+        rpc_controller: google.protobuf.service.RpcController,
+        request: global___GetProcessValuesRequest,
+        callback: collections.abc.Callable[[global___ProcessValues], None] | None = ...,
+    ) -> concurrent.futures.Future[global___ProcessValues]:
+        """current process values"""
+
+    def SelectRemoteSetpoint(
+        inst: Eurotherm_Stub,  # pyright: ignore[reportSelfClsParameterName]
+        rpc_controller: google.protobuf.service.RpcController,
+        request: global___SelectRemoteSetpointRequest,
+        callback: collections.abc.Callable[[global___Empty], None] | None = ...,
+    ) -> concurrent.futures.Future[global___Empty]:
+        """enable/disable remote setpoint"""
+
+    def AcknowledgeAllAlarms(
+        inst: Eurotherm_Stub,  # pyright: ignore[reportSelfClsParameterName]
+        rpc_controller: google.protobuf.service.RpcController,
+        request: global___AcknowlegdeAllAlarmsRequest,
+        callback: collections.abc.Callable[[global___Empty], None] | None = ...,
+    ) -> concurrent.futures.Future[global___Empty]:
+        """acknowledge all alarms"""

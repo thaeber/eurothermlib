@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from datetime import datetime
 import logging
 from abc import ABC, abstractmethod
-from enum import IntFlag
+from enum import IntEnum, IntFlag, Flag, auto
 from typing import cast
 
 import numpy as np
@@ -14,20 +14,26 @@ logger = logging.getLogger(__name__)
 
 
 class InstrumentStatus(IntFlag):
-    NONE = 0x00
-    Alarm1 = 0x0001
-    Alarm2 = 0x0002
-    Alarm3 = 0x0004
-    Alarm4 = 0x0008
-    SensorBreak = 0x0020
-    LoopBreak = 0x0040
-    HeaterFail = 0x0080
-    LoadFail = 0x0100
-    ProgramEnd = 0x0200
-    PVOutOfRange = 0x0400
-    NewAlarm = 0x1000
-    TimerRampRunning = 0x2000
-    RemoteSPFail = 0x4000
+    NONE = auto()
+    Alarm1 = auto()
+    Alarm2 = auto()
+    Alarm3 = auto()
+    Alarm4 = auto()
+    SensorBreak = auto()
+    LoopBreak = auto()
+    HeaterFail = auto()
+    LoadFail = auto()
+    ProgramEnd = auto()
+    PVOutOfRange = auto()
+    NewAlarm = auto()
+    TimerRampRunning = auto()
+    RemoteSPFail = auto()
+    LocalRemoteSPSelect = auto()
+
+
+class RemoteSetpointState(IntEnum):
+    DISBALE = 0
+    ENABLE = 1
 
 
 @dataclass
@@ -42,31 +48,6 @@ class ProcessValues:
 
 class EurothermController(ABC):
     @property
-    @abstractmethod
-    def process_value(self) -> TemperatureQ:
-        pass
-
-    @property
-    @abstractmethod
-    def measured_value(self) -> VoltageQ:
-        pass
-
-    @property
-    @abstractmethod
-    def setpoint(self) -> TemperatureQ:
-        pass
-
-    @property
-    @abstractmethod
-    def working_setpoint(self) -> TemperatureQ:
-        pass
-
-    @property
-    @abstractmethod
-    def working_output(self) -> DimensionlessQ:
-        pass
-
-    @property
     def status(self) -> InstrumentStatus:
         return InstrumentStatus.NONE
 
@@ -79,6 +60,18 @@ class EurothermController(ABC):
             workingOutput=self.working_output,
             status=self.status,
         )
+
+    @abstractmethod
+    def select_remote_setpoint(self, state: RemoteSetpointState):
+        pass
+
+    @abstractmethod
+    def write_remote_setpoint(self, value: TemperatureQ):
+        pass
+
+    @abstractmethod
+    def acknowledge_all_alarms(self):
+        pass
 
 
 class EurothermSimulator(EurothermController):
@@ -128,3 +121,12 @@ class EurothermSimulator(EurothermController):
     @property
     def working_output(self):
         return DimensionlessQ(0.0, '%')
+
+    def select_remote_setpoint(self, state: RemoteSetpointState):
+        pass
+
+    def write_remote_setpoint(self, value: TemperatureQ):
+        pass
+
+    def acknowledge_all_alarms(self):
+        pass

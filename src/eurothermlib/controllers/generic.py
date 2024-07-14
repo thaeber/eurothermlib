@@ -2,13 +2,19 @@ import logging
 import struct
 from datetime import datetime
 from enum import IntEnum
+from typing import Optional
 
 import tenacity
 from pymodbus import ModbusException
 
-from ..utils import DimensionlessQ, TemperatureQ, VoltageQ
+from ..utils import DimensionlessQ, TemperatureQ
 from .connection import ModbusSerialConnection
-from .controller import EurothermController, InstrumentStatus, ProcessValues
+from .controller import (
+    EurothermController,
+    InstrumentStatus,
+    ProcessValues,
+    RemoteSetpointState,
+)
 
 # ureg = pint.application_registry.get()
 logger = logging.getLogger(__name__)
@@ -28,8 +34,10 @@ class GenericAddress(IntEnum):
 
 class GenericEurothermController(EurothermController):
     def __init__(self, unit_address: int, connection: ModbusSerialConnection):
-        self.unit_address = unit_address
-        self.connection = connection
+        self._unit_address = unit_address
+        self._connection = connection
+
+    # region internal
 
     @tenacity.retry(
         reraise=True,
@@ -38,8 +46,8 @@ class GenericEurothermController(EurothermController):
     )
     def _read_int_registers(self, address, num_registers=1):
         try:
-            response = self.connection.read_holding_registers(
-                self.unit_address,
+            response = self._connection.read_holding_registers(
+                self._unit_address,
                 address,
                 num_registers,
             ).result()
@@ -60,25 +68,24 @@ class GenericEurothermController(EurothermController):
             for k in range(0, len(registers), 2)
         ]
 
-    @property
-    def process_value(self) -> TemperatureQ:
-        return TemperatureQ(self._read_float_registers(GenericAddress.PVIN)[0], '°C')
+    @tenacity.retry(
+        reraise=True,
+        stop=tenacity.stop_after_attempt(3),
+        before_sleep=tenacity.before_sleep_log(logger, logging.WARN),
+    )
+    def _write_int_register(self, address: int, value: int):
+        try:
+            response = self._connection.write_holding_register(
+                self._unit_address,
+                address,
+                value,
+            ).result()
+        except ModbusException as ex:
+            raise ex
+        if response.isError():
+            raise ModbusException(response.message)
 
-    @property
-    def measured_value(self) -> VoltageQ:
-        return VoltageQ(self._read_float_registers(GenericAddress.MVIN)[0], 'mV')
-
-    @property
-    def setpoint(self) -> TemperatureQ:
-        return TemperatureQ(self._read_float_registers(GenericAddress.TGSP)[0], '°C')
-
-    @property
-    def working_setpoint(self) -> TemperatureQ:
-        return TemperatureQ(self._read_float_registers(GenericAddress.WKGSP)[0], '°C')
-
-    @property
-    def working_output(self) -> DimensionlessQ:
-        return DimensionlessQ(self._read_float_registers(GenericAddress.WRKOP)[0], '%')
+    # endregion
 
     @property
     def status(self) -> InstrumentStatus:
@@ -116,6 +123,10 @@ class GenericEurothermController(EurothermController):
         if is_set(bits, 14):  # Bit 14
             status |= InstrumentStatus.RemoteSPFail
 
+        remoteSP = self._read_int_registers(address=GenericAddress.LR)[0]
+        if remoteSP:
+            status |= InstrumentStatus.LocalRemoteSPSelect
+
         return status
 
     def get_process_values(self) -> ProcessValues:
@@ -132,3 +143,18 @@ class GenericEurothermController(EurothermController):
             workingOutput=DimensionlessQ(registers[GenericAddress.WRKOP - 1], '%'),
             status=self.status,
         )
+
+    def select_remote_setpoint(self, state: RemoteSetpointState):
+        match state:
+            case RemoteSetpointState.ENABLE:
+                self._write_int_register(GenericAddress.LR, 1)
+            case RemoteSetpointState.DISBALE:
+                self._write_int_register(GenericAddress.LR, 0)
+
+    def write_remote_setpoint(self, value: TemperatureQ):
+        _value = value.m_as('degC')
+        _value = int(round(_value))
+        self._write_int_register(GenericAddress.RmSP, _value)
+
+    def acknowledge_all_alarms(self):
+        self._write_int_register(GenericAddress.AcALL, int(1))

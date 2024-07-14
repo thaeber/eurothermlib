@@ -8,8 +8,9 @@ from typing import Annotated, Any, Dict, List, Literal, Optional
 
 from omegaconf import OmegaConf
 from pydantic import BaseModel, ConfigDict, Field
+from rich.pretty import pretty_repr
 
-from .utils import FrequencyQ
+from .utils import FrequencyQ, TimeQ
 
 OmegaConf.register_new_resolver('now', lambda fmt: datetime.now().strftime(fmt))
 
@@ -24,6 +25,7 @@ logger = logging.getLogger(__name__)
 class ServerConfig(BaseModel):
     ip: IPv4Address = IPv4Address('127.0.0.1')
     port: int = 50061
+    timeout: Annotated[TimeQ, Field(validate_default=True)] = '5s'
 
 
 class SerialPortConfig(BaseModel):
@@ -64,14 +66,20 @@ class Config(BaseModel):
 
 
 def get_configuration(
+    *,
     cmd_args: Optional[List[str]] = None,
     filename: str | PathLike = '.eurotherm.yaml',
     use_cli=False,
 ):
+    logger.info(f'Loading configuration from: {filename}')
     cfg = OmegaConf.load(Path(filename))
     if use_cli:
         cfg.merge_with_cli()
     if cmd_args is not None:
         cfg.merge_with_dotlist(cmd_args)
 
-    return Config.model_validate(OmegaConf.to_container(cfg, resolve=True))
+    result = Config.model_validate(OmegaConf.to_container(cfg, resolve=True))
+    logger.info('Current configuration:')
+    logger.info(pretty_repr(result))
+
+    return result

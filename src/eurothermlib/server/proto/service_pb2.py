@@ -15,7 +15,7 @@ _sym_db = _symbol_database.Default()
 from google.protobuf import timestamp_pb2 as google_dot_protobuf_dot_timestamp__pb2
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\rservice.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"\x07\n\x05\x45mpty\"\r\n\x0bStopRequest\"\x1c\n\x1aStreamProcessValuesRequest\"\xba\x01\n\rProcessValues\x12\x12\n\ndeviceName\x18\x01 \x01(\t\x12-\n\ttimestamp\x18\x02 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\x12\x14\n\x0cprocessValue\x18\x03 \x01(\x01\x12\x10\n\x08setpoint\x18\x04 \x01(\x01\x12\x17\n\x0fworkingSetpoint\x18\x05 \x01(\x01\x12\x15\n\rworkingOutput\x18\x06 \x01(\x01\x12\x0e\n\x06status\x18\x07 \x01(\x05\x32\xa0\x01\n\tEurotherm\x12$\n\nStopServer\x12\x0c.StopRequest\x1a\x06.Empty\"\x00\x12%\n\x11ServerHealthCheck\x12\x06.Empty\x1a\x06.Empty\"\x00\x12\x46\n\x13StreamProcessValues\x12\x1b.StreamProcessValuesRequest\x1a\x0e.ProcessValues\"\x00\x30\x01\x42\x03\x90\x01\x01\x62\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\rservice.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"\x07\n\x05\x45mpty\"\r\n\x0bStopRequest\"\x1c\n\x1aStreamProcessValuesRequest\"-\n\x17GetProcessValuesRequest\x12\x12\n\ndeviceName\x18\x01 \x01(\t\"\xba\x01\n\rProcessValues\x12\x12\n\ndeviceName\x18\x01 \x01(\t\x12-\n\ttimestamp\x18\x02 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\x12\x14\n\x0cprocessValue\x18\x03 \x01(\x01\x12\x10\n\x08setpoint\x18\x04 \x01(\x01\x12\x17\n\x0fworkingSetpoint\x18\x05 \x01(\x01\x12\x15\n\rworkingOutput\x18\x06 \x01(\x01\x12\x0e\n\x06status\x18\x07 \x01(\x05\"V\n\x1bSelectRemoteSetpointRequest\x12\x12\n\ndeviceName\x18\x01 \x01(\t\x12#\n\x05state\x18\x02 \x01(\x0e\x32\x14.RemoteSetpointState\"1\n\x1b\x41\x63knowlegdeAllAlarmsRequest\x12\x12\n\ndeviceName\x18\x01 \x01(\t*0\n\x13RemoteSetpointState\x12\x0c\n\x08\x44ISABLED\x10\x00\x12\x0b\n\x07\x45NABLED\x10\x01\x32\xe0\x02\n\tEurotherm\x12$\n\nStopServer\x12\x0c.StopRequest\x1a\x06.Empty\"\x00\x12%\n\x11ServerHealthCheck\x12\x06.Empty\x1a\x06.Empty\"\x00\x12\x46\n\x13StreamProcessValues\x12\x1b.StreamProcessValuesRequest\x1a\x0e.ProcessValues\"\x00\x30\x01\x12>\n\x10GetProcessValues\x12\x18.GetProcessValuesRequest\x1a\x0e.ProcessValues\"\x00\x12>\n\x14SelectRemoteSetpoint\x12\x1c.SelectRemoteSetpointRequest\x1a\x06.Empty\"\x00\x12>\n\x14\x41\x63knowledgeAllAlarms\x12\x1c.AcknowlegdeAllAlarmsRequest\x1a\x06.Empty\"\x00\x42\x03\x90\x01\x01\x62\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
@@ -23,15 +23,23 @@ _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'service_pb2', _globals)
 if not _descriptor._USE_C_DESCRIPTORS:
   _globals['DESCRIPTOR']._loaded_options = None
   _globals['DESCRIPTOR']._serialized_options = b'\220\001\001'
+  _globals['_REMOTESETPOINTSTATE']._serialized_start=479
+  _globals['_REMOTESETPOINTSTATE']._serialized_end=527
   _globals['_EMPTY']._serialized_start=50
   _globals['_EMPTY']._serialized_end=57
   _globals['_STOPREQUEST']._serialized_start=59
   _globals['_STOPREQUEST']._serialized_end=72
   _globals['_STREAMPROCESSVALUESREQUEST']._serialized_start=74
   _globals['_STREAMPROCESSVALUESREQUEST']._serialized_end=102
-  _globals['_PROCESSVALUES']._serialized_start=105
-  _globals['_PROCESSVALUES']._serialized_end=291
-  _globals['_EUROTHERM']._serialized_start=294
-  _globals['_EUROTHERM']._serialized_end=454
+  _globals['_GETPROCESSVALUESREQUEST']._serialized_start=104
+  _globals['_GETPROCESSVALUESREQUEST']._serialized_end=149
+  _globals['_PROCESSVALUES']._serialized_start=152
+  _globals['_PROCESSVALUES']._serialized_end=338
+  _globals['_SELECTREMOTESETPOINTREQUEST']._serialized_start=340
+  _globals['_SELECTREMOTESETPOINTREQUEST']._serialized_end=426
+  _globals['_ACKNOWLEGDEALLALARMSREQUEST']._serialized_start=428
+  _globals['_ACKNOWLEGDEALLALARMSREQUEST']._serialized_end=477
+  _globals['_EUROTHERM']._serialized_start=530
+  _globals['_EUROTHERM']._serialized_end=882
 _builder.BuildServices(DESCRIPTOR, 'service_pb2', _globals)
 # @@protoc_insertion_point(module_scope)

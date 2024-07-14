@@ -54,6 +54,21 @@ class EurothermStub(object):
                 request_serializer=service__pb2.StreamProcessValuesRequest.SerializeToString,
                 response_deserializer=service__pb2.ProcessValues.FromString,
                 _registered_method=True)
+        self.GetProcessValues = channel.unary_unary(
+                '/Eurotherm/GetProcessValues',
+                request_serializer=service__pb2.GetProcessValuesRequest.SerializeToString,
+                response_deserializer=service__pb2.ProcessValues.FromString,
+                _registered_method=True)
+        self.SelectRemoteSetpoint = channel.unary_unary(
+                '/Eurotherm/SelectRemoteSetpoint',
+                request_serializer=service__pb2.SelectRemoteSetpointRequest.SerializeToString,
+                response_deserializer=service__pb2.Empty.FromString,
+                _registered_method=True)
+        self.AcknowledgeAllAlarms = channel.unary_unary(
+                '/Eurotherm/AcknowledgeAllAlarms',
+                request_serializer=service__pb2.AcknowlegdeAllAlarmsRequest.SerializeToString,
+                response_deserializer=service__pb2.Empty.FromString,
+                _registered_method=True)
 
 
 class EurothermServicer(object):
@@ -80,6 +95,27 @@ class EurothermServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def GetProcessValues(self, request, context):
+        """current process values
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def SelectRemoteSetpoint(self, request, context):
+        """enable/disable remote setpoint
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def AcknowledgeAllAlarms(self, request, context):
+        """acknowledge all alarms
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
 
 def add_EurothermServicer_to_server(servicer, server):
     rpc_method_handlers = {
@@ -97,6 +133,21 @@ def add_EurothermServicer_to_server(servicer, server):
                     servicer.StreamProcessValues,
                     request_deserializer=service__pb2.StreamProcessValuesRequest.FromString,
                     response_serializer=service__pb2.ProcessValues.SerializeToString,
+            ),
+            'GetProcessValues': grpc.unary_unary_rpc_method_handler(
+                    servicer.GetProcessValues,
+                    request_deserializer=service__pb2.GetProcessValuesRequest.FromString,
+                    response_serializer=service__pb2.ProcessValues.SerializeToString,
+            ),
+            'SelectRemoteSetpoint': grpc.unary_unary_rpc_method_handler(
+                    servicer.SelectRemoteSetpoint,
+                    request_deserializer=service__pb2.SelectRemoteSetpointRequest.FromString,
+                    response_serializer=service__pb2.Empty.SerializeToString,
+            ),
+            'AcknowledgeAllAlarms': grpc.unary_unary_rpc_method_handler(
+                    servicer.AcknowledgeAllAlarms,
+                    request_deserializer=service__pb2.AcknowlegdeAllAlarmsRequest.FromString,
+                    response_serializer=service__pb2.Empty.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -180,6 +231,87 @@ class Eurotherm(object):
             '/Eurotherm/StreamProcessValues',
             service__pb2.StreamProcessValuesRequest.SerializeToString,
             service__pb2.ProcessValues.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def GetProcessValues(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/Eurotherm/GetProcessValues',
+            service__pb2.GetProcessValuesRequest.SerializeToString,
+            service__pb2.ProcessValues.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def SelectRemoteSetpoint(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/Eurotherm/SelectRemoteSetpoint',
+            service__pb2.SelectRemoteSetpointRequest.SerializeToString,
+            service__pb2.Empty.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def AcknowledgeAllAlarms(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/Eurotherm/AcknowledgeAllAlarms',
+            service__pb2.AcknowlegdeAllAlarmsRequest.SerializeToString,
+            service__pb2.Empty.FromString,
             options,
             channel_credentials,
             insecure,
