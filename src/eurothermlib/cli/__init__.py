@@ -1,11 +1,9 @@
-from . import cli
-from . import server_cli
-from . import ui_cli
-from . import remote_cli
+from . import alarm_cli, cli, remote_cli, server_cli, ui_cli
 
 __all__ = [
     cli,
-    server_cli,
+    alarm_cli,
     remote_cli,
+    server_cli,
     ui_cli,
 ]  # type: ignore

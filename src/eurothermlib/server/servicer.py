@@ -135,6 +135,18 @@ class EurothermServicer(service_pb2_grpc.EurothermServicer):
 
         return service_pb2.Empty()
 
+    def AcknowledgeAllAlarms(
+        self,
+        request: service_pb2.AcknowlegdeAllAlarmsRequest,
+        context: grpc.ServicerContext,
+    ):
+        # start acquisition thread if necessary
+        self.io.start()
+
+        logger.info(f'[Request] [{repr(request.deviceName)}] Acknowledge all alarms')
+        self.io.acknowledge_all_alarms(request.deviceName)
+        return service_pb2.Empty()
+
 
 class EurothermClient:
     def __init__(self, channel: grpc.Channel, cfg: ServerConfig) -> None:
@@ -181,6 +193,12 @@ class EurothermClient:
             deviceName=device, state=_state
         )
         self._client.SelectRemoteSetpoint(request, timeout=self.timeout)
+
+    def acknowledge_all_alarms(self, device: str):
+        logger.info(f'[{repr(device)}] Acknowledging all alarms')
+        self._client.AcknowledgeAllAlarms(
+            service_pb2.AcknowlegdeAllAlarmsRequest(deviceName=device)
+        )
 
 
 def is_alive(cfg: Config | ServerConfig):

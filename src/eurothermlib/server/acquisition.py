@@ -81,6 +81,14 @@ class EurothermIO(metaclass=SingletonMeta):
         for thread in self._threads.values():
             yield thread
 
+    def _get_thread(self, device: str):
+        with self._lock:
+            if not device in self._threads:
+                logger.error(f'[{repr(device)}] Unknown device name')
+                return None
+            else:
+                return self._threads[device]
+
     def _ensure_observable(self):
         with self._lock:
             if self._observable is None:
@@ -138,10 +146,15 @@ class EurothermIO(metaclass=SingletonMeta):
                 self._observable = None
 
     def select_remote_setpoint(self, device: str, state: RemoteSetpointState):
-        with self._lock:
-            if not device in self._threads:
-                logger.error(f'[{repr(device)}] Unknown device name')
-            self._threads[device].select_remote_setpoint(state)
+        self._get_thread(device).select_remote_setpoint(state)
+
+    def acknowledge_all_alarms(self, device: str):
+        if device == '*':
+            logger.info('Acknowledge alarms on all devices')
+            for thread in self._iter_threads():
+                thread.acknowledge_all_alarms()
+        else:
+            self._get_thread(device).acknowledge_all_alarms()
 
 
 class IOThreadBase(threading.Thread):
@@ -175,6 +188,10 @@ class IOThreadBase(threading.Thread):
 
     def cancel(self):
         self.cancel_event.set()
+
+    @property
+    def cancelled(self):
+        return self.cancel_event.is_set()
 
     def wait_for_termination(
         self,
@@ -216,4 +233,9 @@ class IOThreadBase(threading.Thread):
             time.sleep(sampling_interval)
 
     def select_remote_setpoint(self, state: RemoteSetpointState):
-        self.controller.select_remote_setpoint(state)
+        if not self.cancelled:
+            self.controller.select_remote_setpoint(state)
+
+    def acknowledge_all_alarms(self):
+        if not self.cancelled:
+            self.controller.acknowledge_all_alarms()
