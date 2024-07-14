@@ -11,6 +11,7 @@ logger = logging.getLogger(__name__)
 
 @cli.group()
 def server():
+    """Starting/stopping the server used to interact with the devices."""
     pass
 
 

@@ -4,15 +4,16 @@ import time
 from abc import ABCMeta
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Callable, List, Optional
+from typing import Callable, Dict, List, Optional
 
 import reactivex
 import reactivex.operators as op
 from google.protobuf.timestamp_pb2 import Timestamp
 from reactivex.scheduler import ThreadPoolScheduler
 
+from .. import controllers
 from ..configuration import DeviceConfig
-from ..controllers import EurothermController, EurothermSimulator, InstrumentStatus
+from ..controllers.controller import RemoteSetpointState
 from ..utils import DimensionlessQ, TemperatureQ
 from .proto import service_pb2
 
@@ -25,7 +26,7 @@ class TData:
     setpoint: TemperatureQ
     workingSetpoint: TemperatureQ
     workingOutput: DimensionlessQ
-    status: InstrumentStatus
+    status: controllers.InstrumentStatus
 
     def to_grpc_response(self):
         timestamp = Timestamp()
@@ -50,7 +51,7 @@ class TData:
             setpoint=TemperatureQ(response.setpoint, 'K'),  # type: ignore
             workingSetpoint=TemperatureQ(response.workingSetpoint, 'K'),  # type: ignore
             workingOutput=DimensionlessQ(response.workingOutput, '%'),  # type: ignore
-            status=response.status,
+            status=controllers.InstrumentStatus(response.status),
         )
 
 
@@ -72,9 +73,13 @@ class EurothermIO(metaclass=SingletonMeta):
         super().__init__()
         self.cfg = cfg
         self._lock = threading.Lock()
-        self._threads: List[IOThreadBase] = []
+        self._threads: Dict[str, IOThreadBase] = {}
         self._observable: Optional[reactivex.Subject[TData]] = None
         self._pool = ThreadPoolScheduler()
+
+    def _iter_threads(self):
+        for thread in self._threads.values():
+            yield thread
 
     def _ensure_observable(self):
         with self._lock:
@@ -91,23 +96,19 @@ class EurothermIO(metaclass=SingletonMeta):
         observable = self._ensure_observable()
         return observable.pipe(op.observe_on(self._pool))
 
-    @property
-    def names(self) -> List[str]:
-        return list([c.name for c in self.cfg])
-
-    @property
-    def number_of_channels(self) -> int:
-        return len(self.names)
-
     def start(self):
         with self._lock:
             if not self._threads:
                 # spin up a thread for each device
                 for device in self.cfg:
+                    if device.name in self._threads:
+                        msg = f'A device with the name {device.name} already exists'
+                        logger.error(msg)
+                        raise ValueError(msg)
                     try:
                         thread = IOThreadBase(device, self._emit)
                         thread.start()
-                        self._threads.append(thread)
+                        self._threads[device.name] = thread
                     except ValueError:
                         logger.warning(
                             (
@@ -123,18 +124,24 @@ class EurothermIO(metaclass=SingletonMeta):
         with self._lock:
             if not self._threads:
                 return
-            for thread in self._threads:
+            for thread in self._iter_threads():
                 thread.cancel()
-            for thread in self._threads:
+            for thread in self._iter_threads():
                 thread.join()
 
-            self._threads = []
+            self._threads.clear()
 
     def complete(self):
         with self._lock:
             if self._observable is not None:
                 self._observable.on_completed()
                 self._observable = None
+
+    def select_remote_setpoint(self, device: str, state: RemoteSetpointState):
+        with self._lock:
+            if not device in self._threads:
+                logger.error(f'[{repr(device)}] Unknown device name')
+            self._threads[device].select_remote_setpoint(state)
 
 
 class IOThreadBase(threading.Thread):
@@ -148,11 +155,18 @@ class IOThreadBase(threading.Thread):
         self.device = device
         self.cancel_event = threading.Event()
         self._emit = emit
-        self.controller: EurothermController = EurothermSimulator()
+        self.controller: controllers.EurothermController = (
+            controllers.EurothermSimulator()
+        )
 
         match self.device.driver:
             case 'simulate':
                 pass
+            case 'generic':
+                connection = controllers.ModbusSerialConnection(self.device.connection)
+                self.controller = controllers.GenericEurothermController(
+                    self.device.unitAddress, connection
+                )
             # case 'model3208':
             #     self.controller = EurothermModel3208(None)
             case _:
@@ -200,3 +214,6 @@ class IOThreadBase(threading.Thread):
         while not self.cancel_event.is_set():
             self.emit()
             time.sleep(sampling_interval)
+
+    def select_remote_setpoint(self, state: RemoteSetpointState):
+        self.controller.select_remote_setpoint(state)

@@ -37,6 +37,24 @@ class EurothermStub:
     ]
     """stream process values"""
 
+    GetProcessValues: grpc.UnaryUnaryMultiCallable[
+        service_pb2.GetProcessValuesRequest,
+        service_pb2.ProcessValues,
+    ]
+    """current process values"""
+
+    SelectRemoteSetpoint: grpc.UnaryUnaryMultiCallable[
+        service_pb2.SelectRemoteSetpointRequest,
+        service_pb2.Empty,
+    ]
+    """enable/disable remote setpoint"""
+
+    AcknowledgeAllAlarms: grpc.UnaryUnaryMultiCallable[
+        service_pb2.AcknowlegdeAllAlarmsRequest,
+        service_pb2.Empty,
+    ]
+    """acknowledge all alarms"""
+
 class EurothermAsyncStub:
     StopServer: grpc.aio.UnaryUnaryMultiCallable[
         service_pb2.StopRequest,
@@ -55,6 +73,24 @@ class EurothermAsyncStub:
         service_pb2.ProcessValues,
     ]
     """stream process values"""
+
+    GetProcessValues: grpc.aio.UnaryUnaryMultiCallable[
+        service_pb2.GetProcessValuesRequest,
+        service_pb2.ProcessValues,
+    ]
+    """current process values"""
+
+    SelectRemoteSetpoint: grpc.aio.UnaryUnaryMultiCallable[
+        service_pb2.SelectRemoteSetpointRequest,
+        service_pb2.Empty,
+    ]
+    """enable/disable remote setpoint"""
+
+    AcknowledgeAllAlarms: grpc.aio.UnaryUnaryMultiCallable[
+        service_pb2.AcknowlegdeAllAlarmsRequest,
+        service_pb2.Empty,
+    ]
+    """acknowledge all alarms"""
 
 class EurothermServicer(metaclass=abc.ABCMeta):
     @abc.abstractmethod
@@ -80,5 +116,29 @@ class EurothermServicer(metaclass=abc.ABCMeta):
         context: _ServicerContext,
     ) -> typing.Union[collections.abc.Iterator[service_pb2.ProcessValues], collections.abc.AsyncIterator[service_pb2.ProcessValues]]:
         """stream process values"""
+
+    @abc.abstractmethod
+    def GetProcessValues(
+        self,
+        request: service_pb2.GetProcessValuesRequest,
+        context: _ServicerContext,
+    ) -> typing.Union[service_pb2.ProcessValues, collections.abc.Awaitable[service_pb2.ProcessValues]]:
+        """current process values"""
+
+    @abc.abstractmethod
+    def SelectRemoteSetpoint(
+        self,
+        request: service_pb2.SelectRemoteSetpointRequest,
+        context: _ServicerContext,
+    ) -> typing.Union[service_pb2.Empty, collections.abc.Awaitable[service_pb2.Empty]]:
+        """enable/disable remote setpoint"""
+
+    @abc.abstractmethod
+    def AcknowledgeAllAlarms(
+        self,
+        request: service_pb2.AcknowlegdeAllAlarmsRequest,
+        context: _ServicerContext,
+    ) -> typing.Union[service_pb2.Empty, collections.abc.Awaitable[service_pb2.Empty]]:
+        """acknowledge all alarms"""
 
 def add_EurothermServicer_to_server(servicer: EurothermServicer, server: typing.Union[grpc.Server, grpc.aio.Server]) -> None: ...

@@ -5,6 +5,10 @@ server:
 devices:
   - name: reactor
     sampling_rate: 2Hz
+    driver: generic
+    connection:
+      port: COM7
+      buadRate: 19200
 
 app_logging:
   version: 1
@@ -15,6 +19,9 @@ app_logging:
     rich:
       format: "[%(thread)s] %(message)s"
   handlers:
+    textual:
+      class: textual.logging.TextualHandler
+      formatter: rich
     console:
       class: rich.logging.RichHandler
       formatter: rich
@@ -29,4 +36,5 @@ app_logging:
     handlers:
       - console
       - file
+      # - textual
   disable_existing_loggers: false

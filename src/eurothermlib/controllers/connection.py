@@ -48,3 +48,26 @@ class ModbusSerialConnection:
             register_address,
             num_registers,
         )
+
+    def _do_write_holding_register(
+        self, unit_address: int, register_address: int, value: int
+    ):
+        logger.debug(
+            (
+                f'Write holding register: unit={unit_address},'
+                f'register={register_address}, value={value}'
+            )
+        )
+        return self.client.write_register(
+            address=register_address, value=value, slave=unit_address
+        )
+
+    def write_holding_register(
+        self, unit_address: int, register_address: int, value: int
+    ):
+        return self.executor.submit(
+            self._do_write_holding_register,
+            unit_address,
+            register_address,
+            value,
+        )
