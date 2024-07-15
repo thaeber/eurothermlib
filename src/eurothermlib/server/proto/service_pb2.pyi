@@ -118,7 +118,7 @@ class ProcessValues(google.protobuf.message.Message):
 global___ProcessValues = ProcessValues
 
 @typing.final
-class SelectRemoteSetpointRequest(google.protobuf.message.Message):
+class ToggleRemoteSetpointRequest(google.protobuf.message.Message):
     DESCRIPTOR: google.protobuf.descriptor.Descriptor
 
     DEVICENAME_FIELD_NUMBER: builtins.int
@@ -133,7 +133,25 @@ class SelectRemoteSetpointRequest(google.protobuf.message.Message):
     ) -> None: ...
     def ClearField(self, field_name: typing.Literal["deviceName", b"deviceName", "state", b"state"]) -> None: ...
 
-global___SelectRemoteSetpointRequest = SelectRemoteSetpointRequest
+global___ToggleRemoteSetpointRequest = ToggleRemoteSetpointRequest
+
+@typing.final
+class SetRemoteSetpointRequest(google.protobuf.message.Message):
+    DESCRIPTOR: google.protobuf.descriptor.Descriptor
+
+    DEVICENAME_FIELD_NUMBER: builtins.int
+    VALUE_FIELD_NUMBER: builtins.int
+    deviceName: builtins.str
+    value: builtins.float
+    def __init__(
+        self,
+        *,
+        deviceName: builtins.str = ...,
+        value: builtins.float = ...,
+    ) -> None: ...
+    def ClearField(self, field_name: typing.Literal["deviceName", b"deviceName", "value", b"value"]) -> None: ...
+
+global___SetRemoteSetpointRequest = SetRemoteSetpointRequest
 
 @typing.final
 class AcknowlegdeAllAlarmsRequest(google.protobuf.message.Message):
@@ -189,13 +207,22 @@ class Eurotherm(google.protobuf.service.Service, metaclass=abc.ABCMeta):
         """current process values"""
 
     @abc.abstractmethod
-    def SelectRemoteSetpoint(
+    def ToggleRemoteSetpoint(
         inst: Eurotherm,  # pyright: ignore[reportSelfClsParameterName]
         rpc_controller: google.protobuf.service.RpcController,
-        request: global___SelectRemoteSetpointRequest,
+        request: global___ToggleRemoteSetpointRequest,
         callback: collections.abc.Callable[[global___Empty], None] | None,
     ) -> concurrent.futures.Future[global___Empty]:
         """enable/disable remote setpoint"""
+
+    @abc.abstractmethod
+    def SetRemoteSetpoint(
+        inst: Eurotherm,  # pyright: ignore[reportSelfClsParameterName]
+        rpc_controller: google.protobuf.service.RpcController,
+        request: global___SetRemoteSetpointRequest,
+        callback: collections.abc.Callable[[global___Empty], None] | None,
+    ) -> concurrent.futures.Future[global___Empty]:
+        """set remote setpoint"""
 
     @abc.abstractmethod
     def AcknowledgeAllAlarms(
@@ -241,13 +268,21 @@ class Eurotherm_Stub(Eurotherm):
     ) -> concurrent.futures.Future[global___ProcessValues]:
         """current process values"""
 
-    def SelectRemoteSetpoint(
+    def ToggleRemoteSetpoint(
         inst: Eurotherm_Stub,  # pyright: ignore[reportSelfClsParameterName]
         rpc_controller: google.protobuf.service.RpcController,
-        request: global___SelectRemoteSetpointRequest,
+        request: global___ToggleRemoteSetpointRequest,
         callback: collections.abc.Callable[[global___Empty], None] | None = ...,
     ) -> concurrent.futures.Future[global___Empty]:
         """enable/disable remote setpoint"""
+
+    def SetRemoteSetpoint(
+        inst: Eurotherm_Stub,  # pyright: ignore[reportSelfClsParameterName]
+        rpc_controller: google.protobuf.service.RpcController,
+        request: global___SetRemoteSetpointRequest,
+        callback: collections.abc.Callable[[global___Empty], None] | None = ...,
+    ) -> concurrent.futures.Future[global___Empty]:
+        """set remote setpoint"""
 
     def AcknowledgeAllAlarms(
         inst: Eurotherm_Stub,  # pyright: ignore[reportSelfClsParameterName]

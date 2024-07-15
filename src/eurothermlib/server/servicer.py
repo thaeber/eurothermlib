@@ -114,9 +114,9 @@ class EurothermServicer(service_pb2_grpc.EurothermServicer):
 
         return values.to_grpc_response()
 
-    def SelectRemoteSetpoint(
+    def ToggleRemoteSetpoint(
         self,
-        request: service_pb2.SelectRemoteSetpointRequest,
+        request: service_pb2.ToggleRemoteSetpointRequest,
         context: grpc.ServicerContext,
     ):
         # start acquisition thread if necessary
@@ -131,7 +131,23 @@ class EurothermServicer(service_pb2_grpc.EurothermServicer):
         logger.info(
             f'[Request] [{repr(request.deviceName)}] Setting local remote setpoint selector to: {repr(state)}'
         )
-        self.io.select_remote_setpoint(request.deviceName, state)
+        self.io.toggle_remote_setpoint(request.deviceName, state)
+
+        return service_pb2.Empty()
+
+    def SetRemoteSetpoint(
+        self,
+        request: service_pb2.SetRemoteSetpointRequest,
+        context: grpc.ServicerContext,
+    ):
+        # start acquisition thread if necessary
+        self.io.start()
+
+        value = TemperatureQ(request.value, 'K')
+        logger.info(
+            f'[Request] [{repr(request.deviceName)}] Set remote setpoint to: {value:.2f~P}'
+        )
+        self.io.set_remote_setpoint(request.deviceName, value)
 
         return service_pb2.Empty()
 
@@ -189,10 +205,19 @@ class EurothermClient:
                 logger.warn(f'[{repr(device)}] Falling back to internal setpoint')
             case _:
                 logger.error(f'Unknown remote setpoint state: {state}')
-        request = service_pb2.SelectRemoteSetpointRequest(
-            deviceName=device, state=_state
+        request = service_pb2.ToggleRemoteSetpointRequest(
+            deviceName=device,
+            state=_state,
         )
-        self._client.SelectRemoteSetpoint(request, timeout=self.timeout)
+        self._client.ToggleRemoteSetpoint(request, timeout=self.timeout)
+
+    def set_remote_setpoint(self, device: str, value: TemperatureQ):
+        logger.info(f'[{repr(device)}] Setting remote setpoint: {value:.2f~P}')
+        request = service_pb2.SetRemoteSetpointRequest(
+            deviceName=device,
+            value=value.m_as('K'),
+        )
+        self._client.SetRemoteSetpoint(request)
 
     def acknowledge_all_alarms(self, device: str):
         logger.info(f'[{repr(device)}] Acknowledging all alarms')

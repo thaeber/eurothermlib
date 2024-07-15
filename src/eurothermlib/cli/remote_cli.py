@@ -1,16 +1,15 @@
 import logging
-from concurrent import futures
-from rich.pretty import pretty_repr
 
 import click
+import grpc
+from rich.pretty import pretty_repr
 
 from eurothermlib.configuration import Config
 from eurothermlib.controllers.controller import InstrumentStatus
+from eurothermlib.utils import TemperatureQ
 
 from ..server import servicer
-from .cli import cli, get_configuration
-from ..ui.textual import EurothermApp
-import grpc
+from .cli import cli, device_option, validate_temperature
 
 logger = logging.getLogger(__name__)
 
@@ -23,12 +22,9 @@ def remote():
 
 @remote.command()
 @click.pass_context
-@click.argument('device')
+@device_option
 def enable(ctx: click.Context, device: str):
-    """Enable usage of remote setpoint.
-
-    DEVICE (str): The name of the device for which the remote setpoint is enabled.
-    """
+    """Enable remote setpoint"""
     cfg: Config = ctx.obj['config']
     try:
         client = servicer.connect(cfg.server)
@@ -52,12 +48,9 @@ def enable(ctx: click.Context, device: str):
 
 @remote.command()
 @click.pass_context
-@click.argument('device')
+@device_option
 def disable(ctx: click.Context, device: str):
-    """Disable usage of remote setpoint.
-
-    DEVICE (str): The name of the device for which the remote setpoint is disabled.
-    """
+    """Disable remote setpoint"""
     cfg: Config = ctx.obj['config']
     try:
         client = servicer.connect(cfg.server)
@@ -74,6 +67,37 @@ def disable(ctx: click.Context, device: str):
             logger.info(f'[{repr(device)}] Remote setpoint successfully disabled')
             logger.info(f'[{repr(device)}] Instrument status: {pretty_repr(status)}')
 
+    except grpc.RpcError as ex:
+        logger.error('Remote RPC call failed.')
+        logger.error(ex)
+
+
+@remote.command(short_help='Set the remote setpoint')
+@click.pass_context
+@device_option
+@click.argument('temperature', callback=validate_temperature)
+def set(ctx: click.Context, temperature: TemperatureQ, device: str):
+    """Set remote setpoint to the given TEMPERATURE.
+
+    Examples:
+
+    \b
+    eurotherm remote set 50°C
+    eurotherm remote set 330K
+    eurotherm remote set "330 K"
+
+    TEMPERATURE: New remote setpoint. Must consist of a value and
+    a unit (without a space in between), e.g. 30°C, 30degC,
+    313K, ... If a space is used between the value and unit,
+    the entire expression must be enclosed in quotation marks,
+    e.g. "313 K".
+    """
+    cfg: Config = ctx.obj['config']
+    try:
+        client = servicer.connect(cfg.server)
+        client.is_alive()
+
+        client.set_remote_setpoint(device, temperature)
     except grpc.RpcError as ex:
         logger.error('Remote RPC call failed.')
         logger.error(ex)

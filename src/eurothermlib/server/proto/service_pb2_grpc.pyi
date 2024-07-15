@@ -43,11 +43,17 @@ class EurothermStub:
     ]
     """current process values"""
 
-    SelectRemoteSetpoint: grpc.UnaryUnaryMultiCallable[
-        service_pb2.SelectRemoteSetpointRequest,
+    ToggleRemoteSetpoint: grpc.UnaryUnaryMultiCallable[
+        service_pb2.ToggleRemoteSetpointRequest,
         service_pb2.Empty,
     ]
     """enable/disable remote setpoint"""
+
+    SetRemoteSetpoint: grpc.UnaryUnaryMultiCallable[
+        service_pb2.SetRemoteSetpointRequest,
+        service_pb2.Empty,
+    ]
+    """set remote setpoint"""
 
     AcknowledgeAllAlarms: grpc.UnaryUnaryMultiCallable[
         service_pb2.AcknowlegdeAllAlarmsRequest,
@@ -80,11 +86,17 @@ class EurothermAsyncStub:
     ]
     """current process values"""
 
-    SelectRemoteSetpoint: grpc.aio.UnaryUnaryMultiCallable[
-        service_pb2.SelectRemoteSetpointRequest,
+    ToggleRemoteSetpoint: grpc.aio.UnaryUnaryMultiCallable[
+        service_pb2.ToggleRemoteSetpointRequest,
         service_pb2.Empty,
     ]
     """enable/disable remote setpoint"""
+
+    SetRemoteSetpoint: grpc.aio.UnaryUnaryMultiCallable[
+        service_pb2.SetRemoteSetpointRequest,
+        service_pb2.Empty,
+    ]
+    """set remote setpoint"""
 
     AcknowledgeAllAlarms: grpc.aio.UnaryUnaryMultiCallable[
         service_pb2.AcknowlegdeAllAlarmsRequest,
@@ -126,12 +138,20 @@ class EurothermServicer(metaclass=abc.ABCMeta):
         """current process values"""
 
     @abc.abstractmethod
-    def SelectRemoteSetpoint(
+    def ToggleRemoteSetpoint(
         self,
-        request: service_pb2.SelectRemoteSetpointRequest,
+        request: service_pb2.ToggleRemoteSetpointRequest,
         context: _ServicerContext,
     ) -> typing.Union[service_pb2.Empty, collections.abc.Awaitable[service_pb2.Empty]]:
         """enable/disable remote setpoint"""
+
+    @abc.abstractmethod
+    def SetRemoteSetpoint(
+        self,
+        request: service_pb2.SetRemoteSetpointRequest,
+        context: _ServicerContext,
+    ) -> typing.Union[service_pb2.Empty, collections.abc.Awaitable[service_pb2.Empty]]:
+        """set remote setpoint"""
 
     @abc.abstractmethod
     def AcknowledgeAllAlarms(

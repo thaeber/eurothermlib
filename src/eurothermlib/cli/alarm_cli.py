@@ -6,7 +6,7 @@ import grpc
 from eurothermlib.configuration import Config
 
 from ..server import servicer
-from .cli import cli
+from .cli import cli, device_option
 
 logger = logging.getLogger(__name__)
 
@@ -19,7 +19,7 @@ def alarm():
 
 @alarm.command()
 @click.pass_context
-@click.argument('device', type=str)
+@device_option
 def ack(ctx: click.Context, device: str):
     """Acknowledge all alarms on the specified device.
 

@@ -59,9 +59,14 @@ class EurothermStub(object):
                 request_serializer=service__pb2.GetProcessValuesRequest.SerializeToString,
                 response_deserializer=service__pb2.ProcessValues.FromString,
                 _registered_method=True)
-        self.SelectRemoteSetpoint = channel.unary_unary(
-                '/Eurotherm/SelectRemoteSetpoint',
-                request_serializer=service__pb2.SelectRemoteSetpointRequest.SerializeToString,
+        self.ToggleRemoteSetpoint = channel.unary_unary(
+                '/Eurotherm/ToggleRemoteSetpoint',
+                request_serializer=service__pb2.ToggleRemoteSetpointRequest.SerializeToString,
+                response_deserializer=service__pb2.Empty.FromString,
+                _registered_method=True)
+        self.SetRemoteSetpoint = channel.unary_unary(
+                '/Eurotherm/SetRemoteSetpoint',
+                request_serializer=service__pb2.SetRemoteSetpointRequest.SerializeToString,
                 response_deserializer=service__pb2.Empty.FromString,
                 _registered_method=True)
         self.AcknowledgeAllAlarms = channel.unary_unary(
@@ -102,8 +107,15 @@ class EurothermServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
-    def SelectRemoteSetpoint(self, request, context):
+    def ToggleRemoteSetpoint(self, request, context):
         """enable/disable remote setpoint
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def SetRemoteSetpoint(self, request, context):
+        """set remote setpoint
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -139,9 +151,14 @@ def add_EurothermServicer_to_server(servicer, server):
                     request_deserializer=service__pb2.GetProcessValuesRequest.FromString,
                     response_serializer=service__pb2.ProcessValues.SerializeToString,
             ),
-            'SelectRemoteSetpoint': grpc.unary_unary_rpc_method_handler(
-                    servicer.SelectRemoteSetpoint,
-                    request_deserializer=service__pb2.SelectRemoteSetpointRequest.FromString,
+            'ToggleRemoteSetpoint': grpc.unary_unary_rpc_method_handler(
+                    servicer.ToggleRemoteSetpoint,
+                    request_deserializer=service__pb2.ToggleRemoteSetpointRequest.FromString,
+                    response_serializer=service__pb2.Empty.SerializeToString,
+            ),
+            'SetRemoteSetpoint': grpc.unary_unary_rpc_method_handler(
+                    servicer.SetRemoteSetpoint,
+                    request_deserializer=service__pb2.SetRemoteSetpointRequest.FromString,
                     response_serializer=service__pb2.Empty.SerializeToString,
             ),
             'AcknowledgeAllAlarms': grpc.unary_unary_rpc_method_handler(
@@ -269,7 +286,7 @@ class Eurotherm(object):
             _registered_method=True)
 
     @staticmethod
-    def SelectRemoteSetpoint(request,
+    def ToggleRemoteSetpoint(request,
             target,
             options=(),
             channel_credentials=None,
@@ -282,8 +299,35 @@ class Eurotherm(object):
         return grpc.experimental.unary_unary(
             request,
             target,
-            '/Eurotherm/SelectRemoteSetpoint',
-            service__pb2.SelectRemoteSetpointRequest.SerializeToString,
+            '/Eurotherm/ToggleRemoteSetpoint',
+            service__pb2.ToggleRemoteSetpointRequest.SerializeToString,
+            service__pb2.Empty.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def SetRemoteSetpoint(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/Eurotherm/SetRemoteSetpoint',
+            service__pb2.SetRemoteSetpointRequest.SerializeToString,
             service__pb2.Empty.FromString,
             options,
             channel_credentials,

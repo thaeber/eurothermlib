@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 
 
 class InstrumentStatus(IntFlag):
-    NONE = auto()
+    Ok = auto()
     Alarm1 = auto()
     Alarm2 = auto()
     Alarm3 = auto()
@@ -49,7 +49,7 @@ class ProcessValues:
 class EurothermController(ABC):
     @property
     def status(self) -> InstrumentStatus:
-        return InstrumentStatus.NONE
+        return InstrumentStatus.Ok
 
     def get_process_values(self) -> ProcessValues:
         return ProcessValues(
@@ -62,7 +62,7 @@ class EurothermController(ABC):
         )
 
     @abstractmethod
-    def select_remote_setpoint(self, state: RemoteSetpointState):
+    def toggle_remote_setpoint(self, state: RemoteSetpointState):
         pass
 
     @abstractmethod
@@ -122,7 +122,7 @@ class EurothermSimulator(EurothermController):
     def working_output(self):
         return DimensionlessQ(0.0, '%')
 
-    def select_remote_setpoint(self, state: RemoteSetpointState):
+    def toggle_remote_setpoint(self, state: RemoteSetpointState):
         pass
 
     def write_remote_setpoint(self, value: TemperatureQ):

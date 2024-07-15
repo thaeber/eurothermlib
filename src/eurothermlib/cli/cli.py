@@ -1,19 +1,71 @@
+import functools
 import logging
 import logging.handlers
+import textwrap
 
 import click
 import grpc
-import rich
+from pint import DimensionalityError
 from rich.pretty import pretty_repr
 from rich.traceback import install
 
 from eurothermlib.server import servicer
+from eurothermlib.utils import TemperatureQ
 
 from ..configuration import Config, get_configuration
 
 logger = logging.getLogger(__name__)
 
 install()
+
+
+def validate_device(ctx: click.Context, param, value):
+    cfg: Config = ctx.obj['config']
+
+    if value is None:
+        if len(cfg.devices) == 1:
+            value = cfg.devices[0].name
+            logger.info(f'Using [{repr(value)}] as default device.')
+        else:
+            msg = (
+                'There is more than one device defined in the '
+                'configuration. Unable to pick a default device.'
+            )
+            logger.error(msg)
+            raise click.BadParameter(msg)
+
+    if value not in [d.name for d in cfg.devices]:
+        msg = f'Unknown device. The device [{repr(value)}] is not configured.'
+        logger.error(msg)
+        raise click.BadParameter(msg)
+
+    return value
+
+
+def device_option(f):
+    @click.option(
+        '-d',
+        '--device',
+        type=str,
+        default=None,
+        callback=validate_device,
+        help='''The name of the device to which the command is applied. If only one device 
+            is configured, this device is used as the default. Otherwise, a device
+            must be specified.''',
+    )
+    @functools.wraps(f)
+    def wrapper_common_options(*args, **kwargs):
+        return f(*args, **kwargs)
+
+    return wrapper_common_options
+
+
+def validate_temperature(ctx: click.Context, param, value):
+    try:
+        return TemperatureQ._validate(value)
+    except ValueError as ex:
+        logger.error(str(ex))
+        raise click.BadParameter(f"Could not convert {value} to a temperature.")
 
 
 @click.group
@@ -30,7 +82,7 @@ def cli(ctx: click.Context):
 
 @cli.command()
 @click.pass_context
-@click.argument('device')
+@device_option
 def current(ctx: click.Context, device: str):
     """Return current process values.
 

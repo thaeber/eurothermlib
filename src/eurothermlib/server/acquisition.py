@@ -13,7 +13,11 @@ from reactivex.scheduler import ThreadPoolScheduler
 
 from .. import controllers
 from ..configuration import DeviceConfig
-from ..controllers.controller import RemoteSetpointState
+from ..controllers.controller import (
+    InstrumentStatus,
+    ProcessValues,
+    RemoteSetpointState,
+)
 from ..utils import DimensionlessQ, TemperatureQ
 from .proto import service_pb2
 
@@ -145,8 +149,11 @@ class EurothermIO(metaclass=SingletonMeta):
                 self._observable.on_completed()
                 self._observable = None
 
-    def select_remote_setpoint(self, device: str, state: RemoteSetpointState):
-        self._get_thread(device).select_remote_setpoint(state)
+    def toggle_remote_setpoint(self, device: str, state: RemoteSetpointState):
+        self._get_thread(device).toggle_remote_setpoint(state)
+
+    def set_remote_setpoint(self, device: str, value: TemperatureQ):
+        self._get_thread(device).remote_setpoint = value
 
     def acknowledge_all_alarms(self, device: str):
         if device == '*':
@@ -171,6 +178,7 @@ class IOThreadBase(threading.Thread):
         self.controller: controllers.EurothermController = (
             controllers.EurothermSimulator()
         )
+        self._remote_setpoint = TemperatureQ(28.0, '°C')
 
         match self.device.driver:
             case 'simulate':
@@ -193,6 +201,30 @@ class IOThreadBase(threading.Thread):
     def cancelled(self):
         return self.cancel_event.is_set()
 
+    @property
+    def remote_setpoint(self):
+        with self._lock:
+            return self._remote_setpoint
+
+    @remote_setpoint.setter
+    def remote_setpoint(self, value: TemperatureQ):
+        with self._lock:
+            self._remote_setpoint = value
+
+    # region controller
+
+    def toggle_remote_setpoint(self, state: RemoteSetpointState):
+        if not self.cancelled:
+            self.controller.toggle_remote_setpoint(state)
+
+    def acknowledge_all_alarms(self):
+        if not self.cancelled:
+            self.controller.acknowledge_all_alarms()
+
+    # endregion
+
+    # region thread loop
+
     def wait_for_termination(
         self,
         timeout: Optional[float] = None,
@@ -204,8 +236,7 @@ class IOThreadBase(threading.Thread):
             if (timeout is not None) and (time.monotonic() - start >= timeout):
                 return
 
-    def emit(self):
-        values = self.controller.get_process_values()
+    def emit(self, values: ProcessValues):
         data = TData(
             deviceName=self.device.name,
             timestamp=values.timestamp,
@@ -229,13 +260,16 @@ class IOThreadBase(threading.Thread):
         time.time()
         sampling_interval = 1.0 / self.device.sampling_rate.m_as('Hz')
         while not self.cancel_event.is_set():
-            self.emit()
+            # read current process values
+            values = self.controller.get_process_values()
+
+            # emit process values
+            self.emit(values)
+
+            # write remote setpoint
+            if InstrumentStatus.LocalRemoteSPSelect in values.status:
+                self.controller.write_remote_setpoint(self.remote_setpoint)
+
             time.sleep(sampling_interval)
 
-    def select_remote_setpoint(self, state: RemoteSetpointState):
-        if not self.cancelled:
-            self.controller.select_remote_setpoint(state)
-
-    def acknowledge_all_alarms(self):
-        if not self.cancelled:
-            self.controller.acknowledge_all_alarms()
+    # endregion

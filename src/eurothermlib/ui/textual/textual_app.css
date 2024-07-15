@@ -8,15 +8,25 @@ EurothermDisplay {
     /* border: solid $primary; */
 }
 
+Button {
+    background: $boost 0%;
+}
+
+Button:hover {
+    background: $boost;
+}
+
 CurrentValuesDisplay {
     layout: vertical;
-    width: 35;
-    /* background: $boost; */
-    /* height: 5; */
-    /* margin: 1; */
-    /* min-width: 50; */
-    /* max-width: 50; */
-    /* padding: 1; */
+    padding: 1;
+    width: 40;
+    align-horizontal: right;
+
+    Button {
+        &#button-reset-alarms {
+            border: round $primary;
+        }
+    }
 }
 
 TemperatureDisplay {
@@ -77,4 +87,84 @@ StatusDisplay .enabled {
     &#remoteSPFail {
         background: $error;
     }
+}
+
+
+/* SetpointDisplay #enabled {
+    background: $success;
+} */
+
+SetpointDisplay {
+    layout: horizontal;
+    background: $boost;
+    width: 1fr;
+    height: auto;
+    padding: 1;
+
+    Label {
+        /* align-vertical: middle; */
+        /* width: 10; */
+        margin: 1;
+        padding-left: 1;
+        padding-right: 1;
+        color: $text-muted;
+    }
+
+    #status-group {
+        width: auto;
+        dock: right;
+    }
+
+    Button {
+        &#button-enable {
+            border: round $success;
+        }
+
+        &#button-disable {
+            color: $error;
+            border: round $error;
+        }
+    }
+
+    #label-enabled {
+        background: $success;
+        display: none;
+    }
+
+    #label-disabled {
+        color: $text-disabled;
+        background: $boost;
+    }
+
+    #button-disable {
+        display: none;
+    }
+
+    &.enabled {
+        #label-disabled {
+            display: none;
+        }
+
+        #button-enable {
+            display: none;
+        }
+
+        #label-enabled {
+            display: block;
+        }
+
+        #button-disable {
+            display: block;
+        }
+    }
+
+    /* &.disabled {
+        #label-enabled {
+            display: none;
+        }
+
+        #button-disable {
+            display: none;
+        }
+    } */
 }

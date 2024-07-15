@@ -65,15 +65,17 @@ class TypedQuantity(pint.Quantity):
                     if parsed is not None:
                         source_value, units = parsed
                 value = ureg.Quantity(source_value, units=units)  # type: ignore
+                # value = cls(source_value, units=units)  # type: ignore
         except pint.UndefinedUnitError as ex:
             raise ValueError(f'Cannot convert "{source_value}" to quantity') from ex
         if not isinstance(value, pint.Quantity):
             raise TypeError(f'pint.Quantity required ({value}, type = {type(value)})')
         if cls.__dimensionality__ is not None:
-            if not value.check(cls.__dimensionality__):
+            dim = cls.__dimensionality__
+            if not value.check(dim):
                 raise ValueError(
-                    f"The dimensionality of the passed value ('{source_value}') must "
-                    f"be compatible with '{cls.__dimensionality__}'"
+                    f"The dimensionality of '{source_value} {units}' is "
+                    f"not compatible with '{dim}'"
                 )
         return value
 

@@ -6,9 +6,10 @@ from reactivex import operators as op
 from reactivex.scheduler import ThreadPoolScheduler
 from textual.app import App, ComposeResult
 from textual.reactive import reactive, Reactive
-from textual.widgets import Footer, Header
+from textual.widgets import Footer, Header, Button
 
 from eurothermlib.configuration import Config, get_configuration
+from eurothermlib.controllers.controller import RemoteSetpointState
 from eurothermlib.server import connect
 from eurothermlib.server.acquisition import TData
 
@@ -61,6 +62,15 @@ class EurothermApp(App):
     def action_toggle_units(self):
         self.units = next(UNITS)
         logger.info(f'Changing display units to: {self.units}')
+
+    def action_enable_remote_setpoint(self, device: str):
+        self.client.toggle_remote_setpoint(device, RemoteSetpointState.ENABLE)
+
+    def action_disable_remote_setpoint(self, device: str):
+        self.client.toggle_remote_setpoint(device, RemoteSetpointState.DISBALE)
+
+    def action_acknowledge_alarms(self, device):
+        self.client.acknowledge_all_alarms(device)
 
 
 def main():

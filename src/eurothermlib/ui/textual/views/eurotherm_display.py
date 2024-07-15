@@ -14,10 +14,13 @@ from textual.widgets import (
     OptionList,
     Select,
     Static,
+    Button,
+    Collapsible,
 )
 
 from eurothermlib.controllers import InstrumentStatus
 from eurothermlib.server.acquisition import TData
+from .setpoint_display import SetpointDisplay
 
 logger = logging.getLogger(__name__)
 
@@ -35,7 +38,7 @@ class StatusLabel(Label):
 
 
 class StatusDisplay(Static):
-    status = reactive(InstrumentStatus.NONE)
+    status = reactive(InstrumentStatus.Ok)
 
     def compose(self) -> ComposeResult:
         yield StatusLabel('OK', id='ok')
@@ -44,7 +47,7 @@ class StatusDisplay(Static):
         yield StatusLabel('RemoteSPFail', id='remoteSPFail')
 
     def watch_status(self, status: InstrumentStatus):
-        self.query_one('#ok').state = status == InstrumentStatus.NONE
+        self.query_one('#ok').state = status == InstrumentStatus.Ok
         self.query_one('#alarm').state = (
             status & InstrumentStatus.NewAlarm == InstrumentStatus.NewAlarm
         )
@@ -74,6 +77,7 @@ class CurrentValuesDisplay(Static):
         yield TemperatureDisplay()
         yield DataTable()
         yield StatusDisplay()
+        yield Button('Rest Alarms', id='button-reset-alarms')
 
     def on_mount(self):
         table = self.query_one(DataTable)
@@ -136,13 +140,19 @@ class EurothermDisplay(Static):
         super().__init__(*args, **kwargs)
 
     def compose(self) -> ComposeResult:
-        yield CurrentValuesDisplay(device_name=self.id).data_bind(
-            units=EurothermDisplay.units
-        )
+        with Horizontal():
+            yield CurrentValuesDisplay(device_name=self.id).data_bind(
+                units=EurothermDisplay.units
+            )
+            with Collapsible(title='Setpoint', collapsed=False):
+                yield SetpointDisplay().data_bind(units=EurothermDisplay.units)
 
     def update_values(self, values: TData):
         if values.deviceName == self.id:
             self.query_one(CurrentValuesDisplay).values = values
+            self.query_one(SetpointDisplay).remoteSetpointEnabled = (
+                InstrumentStatus.LocalRemoteSPSelect in values.status
+            )
         else:
             logger.warn(
                 'Received values with non-matching deviceName ({values.deviceName}) for EurothermDisplay with id {self.id}'
@@ -150,3 +160,11 @@ class EurothermDisplay(Static):
 
     def on_mount(self):
         pass
+
+    async def on_button_pressed(self, event: Button.Pressed):
+        if event.button.id == 'button-enable':
+            await self.run_action(f'app.enable_remote_setpoint("{self.id}")')
+        elif event.button.id == 'button-disable':
+            await self.run_action(f'app.disable_remote_setpoint("{self.id}")')
+        elif event.button.id == 'button-reset-alarms':
+            await self.run_action(f'app.acknowledge_alarms("{self.id}")')

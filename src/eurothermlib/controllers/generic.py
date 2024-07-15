@@ -95,7 +95,7 @@ class GenericEurothermController(EurothermController):
             mask = 1 << bit
             return (bits & mask) == mask
 
-        status = InstrumentStatus.NONE
+        status = InstrumentStatus.Ok
         if is_set(bits, 0):  # Bit 0
             status |= InstrumentStatus.Alarm1
         if is_set(bits, 1):  # Bit 1
@@ -144,7 +144,7 @@ class GenericEurothermController(EurothermController):
             status=self.status,
         )
 
-    def select_remote_setpoint(self, state: RemoteSetpointState):
+    def toggle_remote_setpoint(self, state: RemoteSetpointState):
         match state:
             case RemoteSetpointState.ENABLE:
                 self._write_int_register(GenericAddress.LR, 1)

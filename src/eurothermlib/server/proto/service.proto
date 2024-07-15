@@ -17,7 +17,10 @@ service Eurotherm {
     rpc GetProcessValues(GetProcessValuesRequest) returns (ProcessValues) {}
 
     // enable/disable remote setpoint
-    rpc SelectRemoteSetpoint(SelectRemoteSetpointRequest) returns  (Empty) {}
+    rpc ToggleRemoteSetpoint(ToggleRemoteSetpointRequest) returns  (Empty) {}
+
+    // set remote setpoint
+    rpc SetRemoteSetpoint(SetRemoteSetpointRequest) returns (Empty) {}
 
     // acknowledge all alarms
     rpc AcknowledgeAllAlarms(AcknowlegdeAllAlarmsRequest) returns (Empty) {}
@@ -48,9 +51,14 @@ enum RemoteSetpointState {
     ENABLED = 1;
 }
 
-message SelectRemoteSetpointRequest {
+message ToggleRemoteSetpointRequest {
     string deviceName = 1;
     RemoteSetpointState state = 2;
+}
+
+message SetRemoteSetpointRequest {
+    string deviceName = 1;
+    double value = 2;
 }
 
 message AcknowlegdeAllAlarmsRequest {
