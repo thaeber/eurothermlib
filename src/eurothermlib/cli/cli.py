@@ -1,6 +1,7 @@
 import functools
 import logging
 import logging.handlers
+import sys
 
 import click
 import grpc
@@ -69,11 +70,16 @@ def validate_temperature(ctx: click.Context, param, value):
 @click.group
 @click.pass_context
 def cli(ctx: click.Context):
+
+    # load configuration
     config = get_configuration()
     if config.app_logging is not None:
         logging.config.dictConfig(config.app_logging)
-    logging.debug('Using configuration:')
-    logging.debug(pretty_repr(config.model_dump()))
+
+    # log original command
+    logger.info(f'[cli] eurotherm {" ".join(sys.argv[1:])}')
+    logger.info('Using configuration:')
+    logger.debug(pretty_repr(config.model_dump()))
 
     ctx.obj = dict(config=config)
 
@@ -81,7 +87,15 @@ def cli(ctx: click.Context):
 @cli.command()
 @click.pass_context
 @device_option
-def current(ctx: click.Context, device: str):
+@click.option(
+    '-u',
+    '--unit',
+    default='°C',
+    type=str,
+    help='Display units of temperature values',
+    show_default=True,
+)
+def current(ctx: click.Context, device: str, unit: str):
     """Return current process values.
 
     DEVICE (str): The name of the device for which the remote setpoint is enabled.
@@ -91,14 +105,14 @@ def current(ctx: click.Context, device: str):
         client = servicer.connect(cfg.server)
         client.is_alive()
 
-        logger.info(f'[{repr(device)}] Reading process values')
         values = client.current_process_values(device)
 
         logger.info(f'deviceName={values.deviceName}')
         logger.info(f'timestamp={values.timestamp.isoformat()}')
-        logger.info(f'processValue={values.processValue:.2f~#P}')
-        logger.info(f'setpoint={values.setpoint:.2f~#P}')
-        logger.info(f'workingSetpoint={values.workingSetpoint:.2f~#P}')
+        logger.info(f'processValue={values.processValue.to(unit):.2f~#P}')
+        logger.info(f'setpoint={values.setpoint.to(unit):.2f~#P}')
+        logger.info(f'workingSetpoint={values.workingSetpoint.to(unit):.2f~#P}')
+        logger.info(f'remoteSetpoint={values.remoteSetpoint.to(unit):.2f~#P}')
         logger.info(f'workingOutput={values.workingOutput:.2f~#P}')
         logger.info(f'status={repr(values.status)}')
     except grpc.RpcError as ex:

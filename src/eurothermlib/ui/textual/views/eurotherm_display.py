@@ -83,11 +83,12 @@ class CurrentValuesDisplay(Static):
             [
                 ('TG.SP', 'nan'),
                 ('WRK.SP', 'nan'),
+                ('Rm.SP', 'nan'),
                 ('WKG.OP', 'nan'),
                 ('Status', 'error'),
             ]
         )
-        table.cursor_type = 'row'
+        table.cursor_type = 'none'
         table.show_header = False
 
     # def update_values(self, values: TData):
@@ -123,8 +124,11 @@ class CurrentValuesDisplay(Static):
             table.update_cell_at(
                 (1, 1), styled(f'{values.workingSetpoint.to(self.units):.2f~#P}')
             )
-            table.update_cell_at((2, 1), styled(f'{values.workingOutput:.2f~#P}'))
-            table.update_cell_at((3, 1), styled(f'{values.status}'))
+            table.update_cell_at(
+                (2, 1), styled(f'{values.remoteSetpoint.to(self.units):.2f~#P}')
+            )
+            table.update_cell_at((3, 1), styled(f'{values.workingOutput:.2f~#P}'))
+            table.update_cell_at((4, 1), styled(f'{values.status}'))
 
             # status
             self.query_one(StatusDisplay).status = values.status

@@ -39,11 +39,12 @@ message GetProcessValuesRequest {
 message ProcessValues {
     string deviceName = 1;
     google.protobuf.Timestamp timestamp = 2;
-    double processValue = 3;
-    double setpoint = 4;
-    double workingSetpoint = 5;
-    double workingOutput = 6;
-    int32 status = 7;
+    int32 status = 3;
+    double processValue = 4;
+    double setpoint = 5;
+    double workingSetpoint = 6;
+    double remoteSetpoint = 7;
+    double workingOutput = 8;
 }
 
 enum RemoteSetpointState {

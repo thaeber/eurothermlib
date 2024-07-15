@@ -79,7 +79,7 @@ def get_configuration(
         cfg.merge_with_dotlist(cmd_args)
 
     result = Config.model_validate(OmegaConf.to_container(cfg, resolve=True))
-    logger.info('Current configuration:')
-    logger.info(pretty_repr(result))
+    logger.debug('Current configuration:')
+    logger.debug(pretty_repr(result))
 
     return result

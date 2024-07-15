@@ -88,17 +88,19 @@ class ProcessValues(google.protobuf.message.Message):
 
     DEVICENAME_FIELD_NUMBER: builtins.int
     TIMESTAMP_FIELD_NUMBER: builtins.int
+    STATUS_FIELD_NUMBER: builtins.int
     PROCESSVALUE_FIELD_NUMBER: builtins.int
     SETPOINT_FIELD_NUMBER: builtins.int
     WORKINGSETPOINT_FIELD_NUMBER: builtins.int
+    REMOTESETPOINT_FIELD_NUMBER: builtins.int
     WORKINGOUTPUT_FIELD_NUMBER: builtins.int
-    STATUS_FIELD_NUMBER: builtins.int
     deviceName: builtins.str
+    status: builtins.int
     processValue: builtins.float
     setpoint: builtins.float
     workingSetpoint: builtins.float
+    remoteSetpoint: builtins.float
     workingOutput: builtins.float
-    status: builtins.int
     @property
     def timestamp(self) -> google.protobuf.timestamp_pb2.Timestamp: ...
     def __init__(
@@ -106,14 +108,15 @@ class ProcessValues(google.protobuf.message.Message):
         *,
         deviceName: builtins.str = ...,
         timestamp: google.protobuf.timestamp_pb2.Timestamp | None = ...,
+        status: builtins.int = ...,
         processValue: builtins.float = ...,
         setpoint: builtins.float = ...,
         workingSetpoint: builtins.float = ...,
+        remoteSetpoint: builtins.float = ...,
         workingOutput: builtins.float = ...,
-        status: builtins.int = ...,
     ) -> None: ...
     def HasField(self, field_name: typing.Literal["timestamp", b"timestamp"]) -> builtins.bool: ...
-    def ClearField(self, field_name: typing.Literal["deviceName", b"deviceName", "processValue", b"processValue", "setpoint", b"setpoint", "status", b"status", "timestamp", b"timestamp", "workingOutput", b"workingOutput", "workingSetpoint", b"workingSetpoint"]) -> None: ...
+    def ClearField(self, field_name: typing.Literal["deviceName", b"deviceName", "processValue", b"processValue", "remoteSetpoint", b"remoteSetpoint", "setpoint", b"setpoint", "status", b"status", "timestamp", b"timestamp", "workingOutput", b"workingOutput", "workingSetpoint", b"workingSetpoint"]) -> None: ...
 
 global___ProcessValues = ProcessValues
 

@@ -29,6 +29,7 @@ class TData:
     processValue: TemperatureQ
     setpoint: TemperatureQ
     workingSetpoint: TemperatureQ
+    remoteSetpoint: TemperatureQ
     workingOutput: DimensionlessQ
     status: controllers.InstrumentStatus
 
@@ -41,6 +42,7 @@ class TData:
             processValue=self.processValue.m_as('K'),
             setpoint=self.setpoint.m_as('K'),
             workingSetpoint=self.workingSetpoint.m_as('K'),
+            remoteSetpoint=self.remoteSetpoint.m_as('K'),
             workingOutput=self.workingOutput.m_as('%'),
             status=int(self.status),
         )
@@ -54,6 +56,7 @@ class TData:
             processValue=TemperatureQ(response.processValue, 'K'),  # type: ignore
             setpoint=TemperatureQ(response.setpoint, 'K'),  # type: ignore
             workingSetpoint=TemperatureQ(response.workingSetpoint, 'K'),  # type: ignore
+            remoteSetpoint=TemperatureQ(response.remoteSetpoint, 'K'),  # type: ignore
             workingOutput=DimensionlessQ(response.workingOutput, '%'),  # type: ignore
             status=controllers.InstrumentStatus(response.status),
         )
@@ -243,6 +246,7 @@ class IOThreadBase(threading.Thread):
             processValue=values.processValue,
             setpoint=values.setpoint,
             workingSetpoint=values.workingSetpoint,
+            remoteSetpoint=self.remote_setpoint,
             workingOutput=values.workingOutput,
             status=values.status,
         )
