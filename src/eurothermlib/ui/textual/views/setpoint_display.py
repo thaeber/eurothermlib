@@ -1,25 +1,14 @@
 import logging
-from typing import List
 
-from reactivex.scheduler import ThreadPoolScheduler
-from rich.text import Text
 from textual.app import ComposeResult
-from textual.containers import Grid, Horizontal, Vertical
+from textual.containers import Horizontal
 from textual.reactive import reactive
 from textual.widgets import (
-    Checkbox,
-    DataTable,
-    Digits,
     Label,
-    OptionList,
-    Select,
     Static,
     Button,
-    Collapsible,
 )
 
-from eurothermlib.controllers import InstrumentStatus
-from eurothermlib.server.acquisition import TData
 
 logger = logging.getLogger(__name__)
 

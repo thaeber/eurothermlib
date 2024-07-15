@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from datetime import datetime
 import logging
 from abc import ABC, abstractmethod
-from enum import IntEnum, IntFlag, Flag, auto
+from enum import IntEnum, IntFlag, auto
 from typing import cast
 
 import numpy as np

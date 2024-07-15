@@ -2,7 +2,6 @@ import logging
 import struct
 from datetime import datetime
 from enum import IntEnum
-from typing import Optional
 
 import tenacity
 from pymodbus import ModbusException

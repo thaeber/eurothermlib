@@ -9,7 +9,7 @@ devices:
     connection:
       port: COM7
       buadRate: 19200
-  
+
 
 app_logging:
   version: 1

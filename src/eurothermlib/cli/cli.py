@@ -1,11 +1,9 @@
 import functools
 import logging
 import logging.handlers
-import textwrap
 
 import click
 import grpc
-from pint import DimensionalityError
 from rich.pretty import pretty_repr
 from rich.traceback import install
 
@@ -49,9 +47,9 @@ def device_option(f):
         type=str,
         default=None,
         callback=validate_device,
-        help='''The name of the device to which the command is applied. If only one device 
-            is configured, this device is used as the default. Otherwise, a device
-            must be specified.''',
+        help='''The name of the device to which the command is applied.
+            If only one device is configured, this device is used as the
+            default. Otherwise, a device must be specified.''',
     )
     @functools.wraps(f)
     def wrapper_common_options(*args, **kwargs):

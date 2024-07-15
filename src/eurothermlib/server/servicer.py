@@ -1,14 +1,11 @@
 import logging
 import threading
 from concurrent import futures
-from enum import IntEnum
 from queue import Empty as EmptyError
 from queue import Queue
-from typing import Optional
 
 import grpc
 import reactivex.operators as op
-from _collections_abc import AsyncIterator, Awaitable, Iterator
 
 from eurothermlib.controllers.controller import RemoteSetpointState
 from eurothermlib.utils import TemperatureQ
@@ -99,7 +96,10 @@ class EurothermServicer(service_pb2_grpc.EurothermServicer):
         context: grpc.ServicerContext,
     ):
         logger.info(
-            f'[Request] [{repr(request.deviceName)}] Get current process values & instrument status'
+            (
+                f'[Request] [{repr(request.deviceName)}] Get current '
+                'process values & instrument status'
+            )
         )
 
         # start acquisition thread if necessary
@@ -129,7 +129,10 @@ class EurothermServicer(service_pb2_grpc.EurothermServicer):
                 state = RemoteSetpointState.DISBALE
 
         logger.info(
-            f'[Request] [{repr(request.deviceName)}] Setting local remote setpoint selector to: {repr(state)}'
+            (
+                f'[Request] [{repr(request.deviceName)}] Setting local '
+                f'remote setpoint selector to: {repr(state)}'
+            )
         )
         self.io.toggle_remote_setpoint(request.deviceName, state)
 
@@ -145,7 +148,10 @@ class EurothermServicer(service_pb2_grpc.EurothermServicer):
 
         value = TemperatureQ(request.value, 'K')
         logger.info(
-            f'[Request] [{repr(request.deviceName)}] Set remote setpoint to: {value:.2f~P}'
+            (
+                f'[Request] [{repr(request.deviceName)}] '
+                f'Set remote setpoint to: {value:.2f~P}'
+            )
         )
         self.io.set_remote_setpoint(request.deviceName, value)
 

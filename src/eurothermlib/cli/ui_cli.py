@@ -1,9 +1,7 @@
 import logging
-from concurrent import futures
 
 import click
 
-from ..server import servicer
 from .cli import cli, get_configuration
 from ..ui.textual import EurothermApp
 

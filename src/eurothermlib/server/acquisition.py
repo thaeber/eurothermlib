@@ -87,7 +87,7 @@ class EurothermIO(metaclass=SingletonMeta):
 
     def _get_thread(self, device: str):
         with self._lock:
-            if not device in self._threads:
+            if device not in self._threads:
                 logger.error(f'[{repr(device)}] Unknown device name')
                 return None
             else:

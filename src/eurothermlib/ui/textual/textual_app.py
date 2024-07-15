@@ -5,8 +5,8 @@ import reactivex as rx
 from reactivex import operators as op
 from reactivex.scheduler import ThreadPoolScheduler
 from textual.app import App, ComposeResult
-from textual.reactive import reactive, Reactive
-from textual.widgets import Footer, Header, Button
+from textual.reactive import reactive
+from textual.widgets import Footer, Header
 
 from eurothermlib.configuration import Config, get_configuration
 from eurothermlib.controllers.controller import RemoteSetpointState

@@ -1,18 +1,14 @@
 import logging
-from typing import List
 
 from reactivex.scheduler import ThreadPoolScheduler
 from rich.text import Text
 from textual.app import ComposeResult
-from textual.containers import Grid, Horizontal, Vertical
+from textual.containers import Horizontal
 from textual.reactive import reactive
 from textual.widgets import (
-    Checkbox,
     DataTable,
     Digits,
     Label,
-    OptionList,
-    Select,
     Static,
     Button,
     Collapsible,
@@ -64,7 +60,6 @@ class TemperatureDisplay(Digits):
 
 
 class CurrentValuesDisplay(Static):
-
     units = reactive('K')
     values: reactive[TData | None] = reactive(None)
 
@@ -119,7 +114,9 @@ class CurrentValuesDisplay(Static):
             # other values as table
             table = self.query_one(DataTable)
 
-            styled = lambda s: Text(s, justify='right')
+            def styled(s):
+                return Text(s, justify='right')
+
             table.update_cell_at(
                 (0, 1), styled(f'{values.setpoint.to(self.units):.2f~#P}')
             )
@@ -155,7 +152,11 @@ class EurothermDisplay(Static):
             )
         else:
             logger.warn(
-                'Received values with non-matching deviceName ({values.deviceName}) for EurothermDisplay with id {self.id}'
+                (
+                    f'Received values with non-matching deviceName '
+                    f'({values.deviceName}) for EurothermDisplay with '
+                    f'id {self.id}'
+                )
             )
 
     def on_mount(self):
