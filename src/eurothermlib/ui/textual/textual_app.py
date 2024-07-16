@@ -1,10 +1,13 @@
-from itertools import cycle
+from __future__ import annotations
+
 import logging
+from itertools import cycle
 
 import reactivex as rx
 from reactivex import operators as op
 from reactivex.scheduler import ThreadPoolScheduler
 from textual.app import App, ComposeResult
+from textual.message import Message
 from textual.reactive import reactive
 from textual.widgets import Footer, Header
 
@@ -13,6 +16,7 @@ from eurothermlib.controllers.controller import RemoteSetpointState
 from eurothermlib.server import connect
 from eurothermlib.server.acquisition import TData
 
+from .views.error_screen import ErrorScreen
 from .views.eurotherm_display import EurothermDisplay
 
 logger = logging.getLogger(__name__)
@@ -32,18 +36,45 @@ class EurothermApp(App):
     ]
     units = reactive(next(UNITS))
 
+    class ConnectionLost(Message):
+        def __init__(self, ex: Exception = None):
+            self.ex = ex
+
     def __init__(self, config: Config):
         super().__init__(watch_css=True)
         self.cfg = config
+
+    def connect_to_server(self):
+
+        def on_error(ex: Exception = None):
+            self.call_from_thread(
+                self.handle_connection_lost, EurothermApp.ConnectionLost(ex)
+            )
+
         self.client = connect(self.cfg)
         self.observable = rx.from_iterable(self.client.stream_process_values())
-
-    def on_mount(self):
         self.observable.pipe(
             op.subscribe_on(thread_pool),
             # op.throttle_first(timedelta(seconds=1)),
             # op.filter(lambda data: data.deviceName == self.id),
-        ).subscribe(self.update_readings)
+        ).subscribe(
+            self.update_readings,
+            on_error=on_error,
+            on_completed=on_error,
+        )
+
+    def on_mount(self):
+        self.connect_to_server()
+
+    def handle_connection_lost(self, event: EurothermApp.ConnectionLost):
+
+        def check_result(reconnect: bool):
+            if reconnect:
+                self.connect_to_server()
+            else:
+                self.exit()
+
+        self.push_screen(ErrorScreen(), check_result)
 
     def update_readings(self, values: TData):
         self.query_one(f'#{values.deviceName}').update_values(values)
