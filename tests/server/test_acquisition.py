@@ -4,7 +4,7 @@ from reactivex import operators as op
 
 from eurothermlib.configuration import DeviceConfig
 from eurothermlib.controllers import InstrumentStatus
-from eurothermlib.server.acquisition import EurothermIO, TData
+from eurothermlib.server.acquisition import EurothermIO, TData, TemperatureRampState
 from eurothermlib.server.proto import service_pb2
 from eurothermlib.utils import TemperatureQ, DimensionlessQ
 from google.protobuf.timestamp_pb2 import Timestamp
@@ -19,8 +19,10 @@ class TestTData:
             processValue=TemperatureQ(20.0, '°C'),
             setpoint=TemperatureQ(25.0, '°C'),
             workingSetpoint=TemperatureQ(30.0, '°C'),
+            remoteSetpoint=TemperatureQ(25.0, '°C'),
             workingOutput=DimensionlessQ(1.2, '%'),
             status=InstrumentStatus.RemoteSPFail | InstrumentStatus.NewAlarm,
+            rampStatus=TemperatureRampState.NoRamp,
         )
 
         response = data.to_grpc_response()
@@ -29,10 +31,12 @@ class TestTData:
         assert response.processValue == 293.15
         assert response.setpoint == 298.15
         assert response.workingSetpoint == 303.15
+        assert response.remoteSetpoint == 298.15
         assert response.workingOutput == 1.2
         assert response.status == int(
             InstrumentStatus.RemoteSPFail | InstrumentStatus.NewAlarm
         )
+        assert response.rampStatus == int(TemperatureRampState.NoRamp)
 
     def test_from_grpc_response(self):
         now = datetime.now()

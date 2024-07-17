@@ -55,6 +55,18 @@ class EurothermStub:
     ]
     """set remote setpoint"""
 
+    StartTemperatureRamp: grpc.UnaryUnaryMultiCallable[
+        service_pb2.StartTemperatureRampRequest,
+        service_pb2.Empty,
+    ]
+    """start remote temperature ramp"""
+
+    ManageTemperatureRamp: grpc.UnaryUnaryMultiCallable[
+        service_pb2.ManageTemperatureRampRequest,
+        service_pb2.Empty,
+    ]
+    """hold/resume/stop temperature ramp"""
+
     AcknowledgeAllAlarms: grpc.UnaryUnaryMultiCallable[
         service_pb2.AcknowlegdeAllAlarmsRequest,
         service_pb2.Empty,
@@ -97,6 +109,18 @@ class EurothermAsyncStub:
         service_pb2.Empty,
     ]
     """set remote setpoint"""
+
+    StartTemperatureRamp: grpc.aio.UnaryUnaryMultiCallable[
+        service_pb2.StartTemperatureRampRequest,
+        service_pb2.Empty,
+    ]
+    """start remote temperature ramp"""
+
+    ManageTemperatureRamp: grpc.aio.UnaryUnaryMultiCallable[
+        service_pb2.ManageTemperatureRampRequest,
+        service_pb2.Empty,
+    ]
+    """hold/resume/stop temperature ramp"""
 
     AcknowledgeAllAlarms: grpc.aio.UnaryUnaryMultiCallable[
         service_pb2.AcknowlegdeAllAlarmsRequest,
@@ -152,6 +176,22 @@ class EurothermServicer(metaclass=abc.ABCMeta):
         context: _ServicerContext,
     ) -> typing.Union[service_pb2.Empty, collections.abc.Awaitable[service_pb2.Empty]]:
         """set remote setpoint"""
+
+    @abc.abstractmethod
+    def StartTemperatureRamp(
+        self,
+        request: service_pb2.StartTemperatureRampRequest,
+        context: _ServicerContext,
+    ) -> typing.Union[service_pb2.Empty, collections.abc.Awaitable[service_pb2.Empty]]:
+        """start remote temperature ramp"""
+
+    @abc.abstractmethod
+    def ManageTemperatureRamp(
+        self,
+        request: service_pb2.ManageTemperatureRampRequest,
+        context: _ServicerContext,
+    ) -> typing.Union[service_pb2.Empty, collections.abc.Awaitable[service_pb2.Empty]]:
+        """hold/resume/stop temperature ramp"""
 
     @abc.abstractmethod
     def AcknowledgeAllAlarms(

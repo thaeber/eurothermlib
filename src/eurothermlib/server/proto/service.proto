@@ -22,6 +22,12 @@ service Eurotherm {
     // set remote setpoint
     rpc SetRemoteSetpoint(SetRemoteSetpointRequest) returns (Empty) {}
 
+    // start remote temperature ramp
+    rpc StartTemperatureRamp(StartTemperatureRampRequest) returns (Empty) {}
+
+    // hold/resume/stop temperature ramp
+    rpc ManageTemperatureRamp(ManageTemperatureRampRequest) returns (Empty) {}
+
     // acknowledge all alarms
     rpc AcknowledgeAllAlarms(AcknowlegdeAllAlarmsRequest) returns (Empty) {}
 }
@@ -36,6 +42,14 @@ message GetProcessValuesRequest {
     string deviceName = 1;
 }
 
+enum TemperatureRampState {
+    TRS_NORAMP = 0;
+    TRS_RAMPING = 1;
+    TRS_HOLDING = 2;
+    TRS_STOPPED = 3;
+    TRS_FINISHED = 4;
+}
+
 message ProcessValues {
     string deviceName = 1;
     google.protobuf.Timestamp timestamp = 2;
@@ -45,6 +59,7 @@ message ProcessValues {
     double workingSetpoint = 6;
     double remoteSetpoint = 7;
     double workingOutput = 8;
+    TemperatureRampState rampStatus = 9;
 }
 
 enum RemoteSetpointState {
@@ -59,7 +74,24 @@ message ToggleRemoteSetpointRequest {
 
 message SetRemoteSetpointRequest {
     string deviceName = 1;
-    double value = 2;
+    double value = 2;  // temperature [K]
+}
+
+message StartTemperatureRampRequest {
+    string deviceName = 1;
+    double target = 2;  // target temperature [K]
+    double rate = 3;  // rate of change [K/min]
+}
+
+enum TemperatureRampAction {
+    HOLD = 0;
+    RESUME = 1;
+    STOP = 2;
+}
+
+message ManageTemperatureRampRequest {
+    string deviceName = 1;
+    TemperatureRampAction action = 2;
 }
 
 message AcknowlegdeAllAlarmsRequest {

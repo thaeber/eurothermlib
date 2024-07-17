@@ -22,6 +22,27 @@ else:
 
 DESCRIPTOR: google.protobuf.descriptor.FileDescriptor
 
+class _TemperatureRampState:
+    ValueType = typing.NewType("ValueType", builtins.int)
+    V: typing_extensions.TypeAlias = ValueType
+
+class _TemperatureRampStateEnumTypeWrapper(google.protobuf.internal.enum_type_wrapper._EnumTypeWrapper[_TemperatureRampState.ValueType], builtins.type):
+    DESCRIPTOR: google.protobuf.descriptor.EnumDescriptor
+    TRS_NORAMP: _TemperatureRampState.ValueType  # 0
+    TRS_RAMPING: _TemperatureRampState.ValueType  # 1
+    TRS_HOLDING: _TemperatureRampState.ValueType  # 2
+    TRS_STOPPED: _TemperatureRampState.ValueType  # 3
+    TRS_FINISHED: _TemperatureRampState.ValueType  # 4
+
+class TemperatureRampState(_TemperatureRampState, metaclass=_TemperatureRampStateEnumTypeWrapper): ...
+
+TRS_NORAMP: TemperatureRampState.ValueType  # 0
+TRS_RAMPING: TemperatureRampState.ValueType  # 1
+TRS_HOLDING: TemperatureRampState.ValueType  # 2
+TRS_STOPPED: TemperatureRampState.ValueType  # 3
+TRS_FINISHED: TemperatureRampState.ValueType  # 4
+global___TemperatureRampState = TemperatureRampState
+
 class _RemoteSetpointState:
     ValueType = typing.NewType("ValueType", builtins.int)
     V: typing_extensions.TypeAlias = ValueType
@@ -36,6 +57,23 @@ class RemoteSetpointState(_RemoteSetpointState, metaclass=_RemoteSetpointStateEn
 DISABLED: RemoteSetpointState.ValueType  # 0
 ENABLED: RemoteSetpointState.ValueType  # 1
 global___RemoteSetpointState = RemoteSetpointState
+
+class _TemperatureRampAction:
+    ValueType = typing.NewType("ValueType", builtins.int)
+    V: typing_extensions.TypeAlias = ValueType
+
+class _TemperatureRampActionEnumTypeWrapper(google.protobuf.internal.enum_type_wrapper._EnumTypeWrapper[_TemperatureRampAction.ValueType], builtins.type):
+    DESCRIPTOR: google.protobuf.descriptor.EnumDescriptor
+    HOLD: _TemperatureRampAction.ValueType  # 0
+    RESUME: _TemperatureRampAction.ValueType  # 1
+    STOP: _TemperatureRampAction.ValueType  # 2
+
+class TemperatureRampAction(_TemperatureRampAction, metaclass=_TemperatureRampActionEnumTypeWrapper): ...
+
+HOLD: TemperatureRampAction.ValueType  # 0
+RESUME: TemperatureRampAction.ValueType  # 1
+STOP: TemperatureRampAction.ValueType  # 2
+global___TemperatureRampAction = TemperatureRampAction
 
 @typing.final
 class Empty(google.protobuf.message.Message):
@@ -94,6 +132,7 @@ class ProcessValues(google.protobuf.message.Message):
     WORKINGSETPOINT_FIELD_NUMBER: builtins.int
     REMOTESETPOINT_FIELD_NUMBER: builtins.int
     WORKINGOUTPUT_FIELD_NUMBER: builtins.int
+    RAMPSTATUS_FIELD_NUMBER: builtins.int
     deviceName: builtins.str
     status: builtins.int
     processValue: builtins.float
@@ -101,6 +140,7 @@ class ProcessValues(google.protobuf.message.Message):
     workingSetpoint: builtins.float
     remoteSetpoint: builtins.float
     workingOutput: builtins.float
+    rampStatus: global___TemperatureRampState.ValueType
     @property
     def timestamp(self) -> google.protobuf.timestamp_pb2.Timestamp: ...
     def __init__(
@@ -114,9 +154,10 @@ class ProcessValues(google.protobuf.message.Message):
         workingSetpoint: builtins.float = ...,
         remoteSetpoint: builtins.float = ...,
         workingOutput: builtins.float = ...,
+        rampStatus: global___TemperatureRampState.ValueType = ...,
     ) -> None: ...
     def HasField(self, field_name: typing.Literal["timestamp", b"timestamp"]) -> builtins.bool: ...
-    def ClearField(self, field_name: typing.Literal["deviceName", b"deviceName", "processValue", b"processValue", "remoteSetpoint", b"remoteSetpoint", "setpoint", b"setpoint", "status", b"status", "timestamp", b"timestamp", "workingOutput", b"workingOutput", "workingSetpoint", b"workingSetpoint"]) -> None: ...
+    def ClearField(self, field_name: typing.Literal["deviceName", b"deviceName", "processValue", b"processValue", "rampStatus", b"rampStatus", "remoteSetpoint", b"remoteSetpoint", "setpoint", b"setpoint", "status", b"status", "timestamp", b"timestamp", "workingOutput", b"workingOutput", "workingSetpoint", b"workingSetpoint"]) -> None: ...
 
 global___ProcessValues = ProcessValues
 
@@ -146,6 +187,7 @@ class SetRemoteSetpointRequest(google.protobuf.message.Message):
     VALUE_FIELD_NUMBER: builtins.int
     deviceName: builtins.str
     value: builtins.float
+    """temperature [K]"""
     def __init__(
         self,
         *,
@@ -155,6 +197,47 @@ class SetRemoteSetpointRequest(google.protobuf.message.Message):
     def ClearField(self, field_name: typing.Literal["deviceName", b"deviceName", "value", b"value"]) -> None: ...
 
 global___SetRemoteSetpointRequest = SetRemoteSetpointRequest
+
+@typing.final
+class StartTemperatureRampRequest(google.protobuf.message.Message):
+    DESCRIPTOR: google.protobuf.descriptor.Descriptor
+
+    DEVICENAME_FIELD_NUMBER: builtins.int
+    TARGET_FIELD_NUMBER: builtins.int
+    RATE_FIELD_NUMBER: builtins.int
+    deviceName: builtins.str
+    target: builtins.float
+    """target temperature [K]"""
+    rate: builtins.float
+    """rate of change [K/min]"""
+    def __init__(
+        self,
+        *,
+        deviceName: builtins.str = ...,
+        target: builtins.float = ...,
+        rate: builtins.float = ...,
+    ) -> None: ...
+    def ClearField(self, field_name: typing.Literal["deviceName", b"deviceName", "rate", b"rate", "target", b"target"]) -> None: ...
+
+global___StartTemperatureRampRequest = StartTemperatureRampRequest
+
+@typing.final
+class ManageTemperatureRampRequest(google.protobuf.message.Message):
+    DESCRIPTOR: google.protobuf.descriptor.Descriptor
+
+    DEVICENAME_FIELD_NUMBER: builtins.int
+    ACTION_FIELD_NUMBER: builtins.int
+    deviceName: builtins.str
+    action: global___TemperatureRampAction.ValueType
+    def __init__(
+        self,
+        *,
+        deviceName: builtins.str = ...,
+        action: global___TemperatureRampAction.ValueType = ...,
+    ) -> None: ...
+    def ClearField(self, field_name: typing.Literal["action", b"action", "deviceName", b"deviceName"]) -> None: ...
+
+global___ManageTemperatureRampRequest = ManageTemperatureRampRequest
 
 @typing.final
 class AcknowlegdeAllAlarmsRequest(google.protobuf.message.Message):
@@ -228,6 +311,24 @@ class Eurotherm(google.protobuf.service.Service, metaclass=abc.ABCMeta):
         """set remote setpoint"""
 
     @abc.abstractmethod
+    def StartTemperatureRamp(
+        inst: Eurotherm,  # pyright: ignore[reportSelfClsParameterName]
+        rpc_controller: google.protobuf.service.RpcController,
+        request: global___StartTemperatureRampRequest,
+        callback: collections.abc.Callable[[global___Empty], None] | None,
+    ) -> concurrent.futures.Future[global___Empty]:
+        """start remote temperature ramp"""
+
+    @abc.abstractmethod
+    def ManageTemperatureRamp(
+        inst: Eurotherm,  # pyright: ignore[reportSelfClsParameterName]
+        rpc_controller: google.protobuf.service.RpcController,
+        request: global___ManageTemperatureRampRequest,
+        callback: collections.abc.Callable[[global___Empty], None] | None,
+    ) -> concurrent.futures.Future[global___Empty]:
+        """hold/resume/stop temperature ramp"""
+
+    @abc.abstractmethod
     def AcknowledgeAllAlarms(
         inst: Eurotherm,  # pyright: ignore[reportSelfClsParameterName]
         rpc_controller: google.protobuf.service.RpcController,
@@ -286,6 +387,22 @@ class Eurotherm_Stub(Eurotherm):
         callback: collections.abc.Callable[[global___Empty], None] | None = ...,
     ) -> concurrent.futures.Future[global___Empty]:
         """set remote setpoint"""
+
+    def StartTemperatureRamp(
+        inst: Eurotherm_Stub,  # pyright: ignore[reportSelfClsParameterName]
+        rpc_controller: google.protobuf.service.RpcController,
+        request: global___StartTemperatureRampRequest,
+        callback: collections.abc.Callable[[global___Empty], None] | None = ...,
+    ) -> concurrent.futures.Future[global___Empty]:
+        """start remote temperature ramp"""
+
+    def ManageTemperatureRamp(
+        inst: Eurotherm_Stub,  # pyright: ignore[reportSelfClsParameterName]
+        rpc_controller: google.protobuf.service.RpcController,
+        request: global___ManageTemperatureRampRequest,
+        callback: collections.abc.Callable[[global___Empty], None] | None = ...,
+    ) -> concurrent.futures.Future[global___Empty]:
+        """hold/resume/stop temperature ramp"""
 
     def AcknowledgeAllAlarms(
         inst: Eurotherm_Stub,  # pyright: ignore[reportSelfClsParameterName]

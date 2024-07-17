@@ -6,10 +6,10 @@ from rich.pretty import pretty_repr
 
 from eurothermlib.configuration import Config
 from eurothermlib.controllers.controller import InstrumentStatus
-from eurothermlib.utils import TemperatureQ
+from eurothermlib.utils import TemperatureQ, TemperatureRateQ
 
 from ..server import servicer
-from .cli import cli, device_option, validate_temperature
+from .cli import cli, device_option, validate_temperature, validate_temperature_rate
 
 logger = logging.getLogger(__name__)
 
@@ -98,6 +98,55 @@ def set(ctx: click.Context, temperature: TemperatureQ, device: str):
         client.is_alive()
 
         client.set_remote_setpoint(device, temperature)
+    except grpc.RpcError as ex:
+        logger.error('Remote RPC call failed.')
+        logger.error(ex)
+
+
+@remote.group()
+def ramp():
+    """Start/stop temeprature ramp"""
+    pass
+
+
+@ramp.command(short_help='Set the remote setpoint')
+@click.pass_context
+@device_option
+@click.argument('temperature', callback=validate_temperature)
+@click.option(
+    '-r',
+    '--rate',
+    type=str,
+    default='2 K/min',
+    show_default=True,
+    callback=validate_temperature_rate,
+    help='The rate at which the temeprature will increase, e.g. 2K/min',
+)
+def start(ctx, temperature: TemperatureQ, rate: TemperatureRateQ, device: str):
+    """Starts a temperature ramp.
+
+    The ramp starts from the current temperature with an
+    optional rate (e.g., K/min) until the target TEMPERATURE
+    is reached.
+
+    Examples:
+
+    \b
+    eurotherm remote ramp start 50°C
+    eurotherm remote ramp start 50°C --rate 2K/min
+
+    TEMPERATURE: The target temperature. Must consist of a value and
+    a unit (without a space in between), e.g. 30°C, 30degC,
+    313K, ... If a space is used between the value and unit,
+    the entire expression must be enclosed in quotation marks,
+    e.g. "313 K".
+    """
+    cfg: Config = ctx.obj['config']
+    try:
+        client = servicer.connect(cfg.server)
+        client.is_alive()
+
+        client.start_temperature_ramp(device, temperature, rate)
     except grpc.RpcError as ex:
         logger.error('Remote RPC call failed.')
         logger.error(ex)

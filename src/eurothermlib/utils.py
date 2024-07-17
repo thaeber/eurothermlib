@@ -15,13 +15,23 @@ class TypedQuantity(pint.Quantity):
     def __class_getitem__(cls, item):
         return type(cls.__name__, (cls,), {"__dimensionality__": item})
 
-    def __init__(self, *args, **kwargs):
-        if not self.check(self.__dimensionality__):  # type: ignore
+    # def __init__(self, *args, **kwargs):
+    #     if not self.check(self.__dimensionality__):  # type: ignore
+    #         raise pint.DimensionalityError(
+    #             units2=self.__dimensionality__,
+    #             units1=self.units,
+    #             extra_msg=f' (value = {self})',
+    #         )
+
+    def __new__(cls, *args, **kwargs):
+        obj = pint.Quantity.__new__(pint.Quantity, *args, **kwargs)
+        if not obj.check(cls.__dimensionality__):  # type: ignore
             raise pint.DimensionalityError(
-                units2=self.__dimensionality__,
-                units1=self.units,
-                extra_msg=f' (value = {self})',
+                units2=cls.__dimensionality__,
+                units1=obj.units,
+                extra_msg=f' (value = {obj})',
             )
+        return obj
 
     @staticmethod
     def parse_expression(input_string: str):
@@ -103,6 +113,7 @@ class TypedQuantity(pint.Quantity):
 
 VoltageQ: TypeAlias = TypedQuantity['[electric_potential]']
 TemperatureQ: TypeAlias = TypedQuantity['[temperature]']
+TemperatureRateQ: TypeAlias = TypedQuantity['[temperature]/[time]']
 DimensionlessQ: TypeAlias = TypedQuantity['[]']
 FrequencyQ: TypeAlias = TypedQuantity['1/[time]']
 TimeQ: TypeAlias = TypedQuantity['[time]']

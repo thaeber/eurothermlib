@@ -1,3 +1,4 @@
+from _collections_abc import Awaitable
 import logging
 import threading
 from concurrent import futures
@@ -8,7 +9,7 @@ import grpc
 import reactivex.operators as op
 
 from eurothermlib.controllers.controller import RemoteSetpointState
-from eurothermlib.utils import TemperatureQ
+from eurothermlib.utils import TemperatureQ, TemperatureRateQ
 
 from ..configuration import Config, ServerConfig
 from .acquisition import EurothermIO, TData
@@ -22,6 +23,7 @@ class EurothermServicer(service_pb2_grpc.EurothermServicer):
         super().__init__()
         self.stop_event = threading.Event()
         self.io = EurothermIO(cfg.devices)
+        self.io.start()
 
     def StopServer(
         self,
@@ -157,6 +159,28 @@ class EurothermServicer(service_pb2_grpc.EurothermServicer):
 
         return service_pb2.Empty()
 
+    def StartTemperatureRamp(
+        self,
+        request: service_pb2.StartTemperatureRampRequest,
+        context: grpc.ServicerContext,
+    ):
+        # start acquisition thread if necessary
+        self.io.start()
+
+        device = request.deviceName
+        to = TemperatureQ(request.target, 'K')
+        rate = TemperatureRateQ(request.rate, 'K/min')
+
+        logger.info(
+            (
+                f'[Request] [{repr(device)}] '
+                f'Temperature ramp to {to:.2f~P} @ {rate:.2f~P}'
+            )
+        )
+        self.io.start_temperature_ramp(device, to, rate)
+
+        return service_pb2.Empty()
+
     def AcknowledgeAllAlarms(
         self,
         request: service_pb2.AcknowlegdeAllAlarmsRequest,
@@ -224,6 +248,19 @@ class EurothermClient:
             value=value.m_as('K'),
         )
         self._client.SetRemoteSetpoint(request)
+
+    def start_temperature_ramp(
+        self, device: str, to: TemperatureQ, rate: TemperatureRateQ
+    ):
+        logger.info(
+            (f'[{repr(device)}] ' f'Temperature ramp to {to:.2f~P} @ {rate:.2f~P}')
+        )
+        request = service_pb2.StartTemperatureRampRequest(
+            deviceName=device,
+            target=to.m_as('K'),
+            rate=rate.m_as('K/min'),
+        )
+        self._client.StartTemperatureRamp(request)
 
     def acknowledge_all_alarms(self, device: str):
         logger.info(f'[{repr(device)}] Acknowledging all alarms')

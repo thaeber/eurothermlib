@@ -9,7 +9,7 @@ from rich.pretty import pretty_repr
 from rich.traceback import install
 
 from eurothermlib.server import servicer
-from eurothermlib.utils import TemperatureQ
+from eurothermlib.utils import TemperatureQ, TemperatureRateQ
 
 from ..configuration import Config, get_configuration
 
@@ -64,7 +64,19 @@ def validate_temperature(ctx: click.Context, param, value):
         return TemperatureQ._validate(value)
     except ValueError as ex:
         logger.error(str(ex))
-        raise click.BadParameter(f"Could not convert {value} to a temperature.")
+        raise click.BadParameter(
+            f"units of {value} are incompatible with [temperature]."
+        )
+
+
+def validate_temperature_rate(ctx: click.Context, param, value):
+    try:
+        return TemperatureRateQ._validate(value)
+    except ValueError as ex:
+        logger.error(str(ex))
+        raise click.BadParameter(
+            f"Units of {value} are incompatible with [temperature]/[time]."
+        )
 
 
 @click.group

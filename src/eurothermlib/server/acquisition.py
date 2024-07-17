@@ -4,8 +4,10 @@ import time
 from abc import ABCMeta
 from dataclasses import dataclass
 from datetime import datetime
+from enum import IntFlag, auto
 from typing import Callable, Dict, List, Optional
 
+import numpy as np
 import reactivex
 import reactivex.operators as op
 from google.protobuf.timestamp_pb2 import Timestamp
@@ -18,8 +20,16 @@ from ..controllers.controller import (
     ProcessValues,
     RemoteSetpointState,
 )
-from ..utils import DimensionlessQ, TemperatureQ
+from ..utils import DimensionlessQ, TemperatureQ, TemperatureRateQ, TimeQ
 from .proto import service_pb2
+
+
+class TemperatureRampState(IntFlag):
+    NoRamp = auto()
+    Ramping = auto()
+    Holding = auto()
+    Stopped = auto()
+    Finished = auto()
 
 
 @dataclass
@@ -32,6 +42,7 @@ class TData:
     remoteSetpoint: TemperatureQ
     workingOutput: DimensionlessQ
     status: controllers.InstrumentStatus
+    rampStatus: TemperatureRampState
 
     def to_grpc_response(self):
         timestamp = Timestamp()
@@ -45,6 +56,7 @@ class TData:
             remoteSetpoint=self.remoteSetpoint.m_as('K'),
             workingOutput=self.workingOutput.m_as('%'),
             status=int(self.status),
+            rampStatus=int(self.rampStatus),
         )
         return response
 
@@ -59,6 +71,7 @@ class TData:
             remoteSetpoint=TemperatureQ(response.remoteSetpoint, 'K'),  # type: ignore
             workingOutput=DimensionlessQ(response.workingOutput, '%'),  # type: ignore
             status=controllers.InstrumentStatus(response.status),
+            rampStatus=TemperatureRampState(response.rampStatus),
         )
 
 
@@ -79,8 +92,8 @@ class EurothermIO(metaclass=SingletonMeta):
     def __init__(self, cfg: List[DeviceConfig]) -> None:
         super().__init__()
         self.cfg = cfg
-        self._lock = threading.Lock()
-        self._threads: Dict[str, IOThreadBase] = {}
+        self._lock = threading.RLock()
+        self._threads: Dict[str, IOThread] = {}
         self._observable: Optional[reactivex.Subject[TData]] = None
         self._pool = ThreadPoolScheduler()
 
@@ -121,7 +134,7 @@ class EurothermIO(metaclass=SingletonMeta):
                         logger.error(msg)
                         raise ValueError(msg)
                     try:
-                        thread = IOThreadBase(device, self._emit)
+                        thread = IOThread(device, self._emit)
                         thread.start()
                         self._threads[device.name] = thread
                     except ValueError:
@@ -158,6 +171,11 @@ class EurothermIO(metaclass=SingletonMeta):
     def set_remote_setpoint(self, device: str, value: TemperatureQ):
         self._get_thread(device).remote_setpoint = value
 
+    def start_temperature_ramp(
+        self, device: str, to: TemperatureQ, rate: TemperatureRateQ
+    ):
+        return self._get_thread(device).start_temperature_ramp(to, rate)
+
     def acknowledge_all_alarms(self, device: str):
         if device == '*':
             logger.info('Acknowledge alarms on all devices')
@@ -167,14 +185,14 @@ class EurothermIO(metaclass=SingletonMeta):
             self._get_thread(device).acknowledge_all_alarms()
 
 
-class IOThreadBase(threading.Thread):
+class IOThread(threading.Thread):
     def __init__(
         self,
         device: DeviceConfig,
         emit: TEmitter,
     ):
         super().__init__()
-        self._lock = threading.Lock()
+        self._lock = threading.RLock()
         self.device = device
         self.cancel_event = threading.Event()
         self._emit = emit
@@ -182,6 +200,7 @@ class IOThreadBase(threading.Thread):
             controllers.EurothermSimulator()
         )
         self._remote_setpoint = TemperatureQ(28.0, '°C')
+        self._ramp_thread: Optional[TemperatureRampThread] = None
 
         match self.device.driver:
             case 'simulate':
@@ -197,7 +216,16 @@ class IOThreadBase(threading.Thread):
                 logger.error(f'Unknown device driver: {device.driver}')
                 raise ValueError(f'Unknown device driver: {device.driver}')
 
+    def join(self, timeout: float | None = None) -> None:
+        with self._lock:
+            if self._ramp_thread is not None:
+                self._ramp_thread.join(timeout)
+        return super().join(timeout)
+
     def cancel(self):
+        with self._lock:
+            if self._ramp_thread is not None:
+                self._ramp_thread.cancel()
         self.cancel_event.set()
 
     @property
@@ -214,7 +242,17 @@ class IOThreadBase(threading.Thread):
         with self._lock:
             self._remote_setpoint = value
 
-    # region controller
+    @property
+    def ramp_status(self):
+        with self._lock:
+            if self._ramp_thread is None:
+                return TemperatureRampState.NoRamp
+            elif self._ramp_thread.cancelled:
+                return TemperatureRampState.Stopped
+            elif not self._ramp_thread.is_alive():
+                return TemperatureRampState.Finished
+            else:
+                return TemperatureRampState.Ramping
 
     def toggle_remote_setpoint(self, state: RemoteSetpointState):
         if not self.cancelled:
@@ -224,20 +262,36 @@ class IOThreadBase(threading.Thread):
         if not self.cancelled:
             self.controller.acknowledge_all_alarms()
 
-    # endregion
+    def start_temperature_ramp(self, to: TemperatureQ, rate: TemperatureRateQ):
+        logger.debug('Acquire lock...')
+        with self._lock:
+            logger.debug('...lock acquired.')
+            if self.ramp_status == TemperatureRampState.Ramping:
+                msg = 'Found active temperature ramp: {0:.2f~P} to {1:.2f~P} @ {2:.2f~P}'.format(
+                    self._ramp_thread.T_start,
+                    self._ramp_thread.T_end,
+                    self._ramp_thread.rate,
+                )
+                logger.info(msg)
+                logger.info('Cancelling active ramp...')
+                self._ramp_thread.cancel()
+                self._ramp_thread.join()
+                logger.info('...ramp cancelled')
 
-    # region thread loop
+            # read current temperature
+            T_start = self.controller.get_process_values().processValue
 
-    def wait_for_termination(
-        self,
-        timeout: Optional[float] = None,
-        polling_interval: float = 0.2,
-    ):
-        start = time.monotonic()
-        while self.is_alive():
-            self.join(polling_interval)
-            if (timeout is not None) and (time.monotonic() - start >= timeout):
-                return
+            # start new ramp
+            msg = (
+                'Starting temperature ramp: {0:.2f~P} to {1:.2f~P} @ {2:.2f~P}'.format(
+                    T_start, to, rate
+                )
+            )
+            logger.info(msg)
+            self._ramp_thread = TemperatureRampThread(self, T_start, to, rate)
+            self._ramp_thread.start()
+
+            return self._ramp_thread.observable
 
     def emit(self, values: ProcessValues):
         data = TData(
@@ -249,6 +303,7 @@ class IOThreadBase(threading.Thread):
             remoteSetpoint=self.remote_setpoint,
             workingOutput=values.workingOutput,
             status=values.status,
+            rampStatus=self.ramp_status,
         )
         self._emit(data)
 
@@ -276,4 +331,63 @@ class IOThreadBase(threading.Thread):
 
             time.sleep(sampling_interval)
 
-    # endregion
+
+class TemperatureRampThread(threading.Thread):
+    def __init__(
+        self,
+        iothread: IOThread,
+        T_start: TemperatureQ,
+        T_end: TemperatureQ,
+        temprature_rate: TemperatureRateQ,
+    ):
+        super().__init__()
+        self.cancel_event = threading.Event()
+        self._iothread = iothread
+        self.T_start = T_start.to('K')
+        self.T_end = T_end.to('K')
+        self.rate = temprature_rate.to('K/min')
+        self.observable = reactivex.Subject[TemperatureQ]()
+
+    def cancel(self):
+        self.cancel_event.set()
+
+    @property
+    def cancelled(self):
+        return self.cancel_event.is_set()
+
+    def run(self):
+        logger.info(
+            f'{self.__class__.__name__} started for device {self._iothread.device.name}'
+        )
+        # do actual work
+        try:
+            self.do_work()
+        except Exception:
+            logger.exception(f'Exception occurred in task: {self.__class__.__name__}')
+
+    def do_work(self):
+        time.time()
+        sampling_interval = 1.0  # seconds
+        t0 = time.monotonic()  # monotonic clock in fractional seconds
+        current = self.T_start
+        sign = np.sign(self.T_end.m_as('K') - self.T_start.m_as('K'))
+        while not self.cancel_event.is_set():
+            # elapsed time
+            elapsed: TimeQ = TimeQ(time.monotonic() - t0, 's')
+
+            # calculate new setpoint
+            current: TemperatureQ = self.T_start + sign * self.rate * elapsed
+
+            if sign * (current - self.T_end) > 0:
+                self._iothread.remote_setpoint = self.T_end
+                self.observable.on_next(self.T_end)
+                break  # terminate loop
+            else:
+                self._iothread.remote_setpoint = current
+                self.observable.on_next(current)
+
+            time.sleep(sampling_interval)
+
+        # signal completion of temperature ramp
+        self.observable.on_completed()
+        self.observable.dispose()
