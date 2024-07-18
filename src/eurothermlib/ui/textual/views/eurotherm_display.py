@@ -13,9 +13,10 @@ from textual.widgets import (
     Button,
     Collapsible,
 )
+from textual.widget import Widget
 
 from eurothermlib.controllers import InstrumentStatus
-from eurothermlib.server.acquisition import TData
+from eurothermlib.server.acquisition import TData, TemperatureRampState
 from .setpoint_display import SetpointDisplay
 
 logger = logging.getLogger(__name__)
@@ -41,18 +42,37 @@ class StatusDisplay(Static):
         yield StatusLabel('NewAlarm', id='alarm')
         yield StatusLabel('SensorBreak', id='sensorBreak')
         yield StatusLabel('RemoteSPFail', id='remoteSPFail')
+        yield StatusLabel('')
+        yield StatusLabel('UseRemoteSP', id='useRemoteSP')
 
     def watch_status(self, status: InstrumentStatus):
-        self.query_one('#ok').state = status == InstrumentStatus.Ok
-        self.query_one('#alarm').state = (
-            status & InstrumentStatus.NewAlarm == InstrumentStatus.NewAlarm
+        self.query_one('#ok').state = InstrumentStatus.Ok in status
+        self.query_one('#alarm').state = InstrumentStatus.NewAlarm in status
+        self.query_one('#sensorBreak').state = InstrumentStatus.SensorBreak in status
+        self.query_one('#remoteSPFail').state = InstrumentStatus.RemoteSPFail in status
+        self.query_one('#useRemoteSP').state = (
+            InstrumentStatus.LocalRemoteSPSelect in status
         )
-        self.query_one('#sensorBreak').state = (
-            status & InstrumentStatus.SensorBreak == InstrumentStatus.SensorBreak
-        )
-        self.query_one('#remoteSPFail').state = (
-            status & InstrumentStatus.RemoteSPFail == InstrumentStatus.RemoteSPFail
-        )
+
+
+class RampStatusLabel(Widget):
+
+    status = reactive(TemperatureRampState.NoRamp)
+
+    def render(self):
+        label = 'no ramp'
+
+        match self.status:
+            case TemperatureRampState.Ramping:
+                label = 'running'
+            case TemperatureRampState.Holding:
+                label = 'holding'
+            case TemperatureRampState.Stopped:
+                label = 'stopped'
+            case TemperatureRampState.Finished:
+                label = 'finished'
+
+        return label
 
 
 class TemperatureDisplay(Digits):
@@ -68,9 +88,14 @@ class CurrentValuesDisplay(Static):
         super().__init__(*args, **kwargs)
 
     def compose(self) -> ComposeResult:
-        yield Label(f'Device: {self.device_name}')
+        with Horizontal():
+            yield Label(f'Device: {self.device_name}')
+            yield Label(' ', id='acquire')
         yield TemperatureDisplay()
         yield DataTable()
+        with Horizontal():
+            yield Label('Remote ramp:')
+            yield RampStatusLabel()
         yield StatusDisplay()
         yield Button('Rest Alarms', id='button-reset-alarms')
 
@@ -103,6 +128,8 @@ class CurrentValuesDisplay(Static):
     def update_display(self):
         values = self.values
         if values is not None:
+            self.query_one('#acquire').toggle_class('on')
+
             # process value
             self.query_one(TemperatureDisplay).update(
                 f'{values.processValue.to(self.units):.2f~#P}'
@@ -132,6 +159,7 @@ class CurrentValuesDisplay(Static):
 
             # status
             self.query_one(StatusDisplay).status = values.status
+            self.query_one(RampStatusLabel).status = values.rampStatus
 
 
 class EurothermDisplay(Static):

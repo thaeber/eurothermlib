@@ -174,7 +174,8 @@ class EurothermIO(metaclass=SingletonMeta):
     def start_temperature_ramp(
         self, device: str, to: TemperatureQ, rate: TemperatureRateQ
     ):
-        return self._get_thread(device).start_temperature_ramp(to, rate)
+        observable = self._get_thread(device).start_temperature_ramp(to, rate)
+        return observable.pipe(op.observe_on(self._pool))
 
     def acknowledge_all_alarms(self, device: str):
         if device == '*':

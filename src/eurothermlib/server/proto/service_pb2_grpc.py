@@ -69,10 +69,10 @@ class EurothermStub(object):
                 request_serializer=service__pb2.SetRemoteSetpointRequest.SerializeToString,
                 response_deserializer=service__pb2.Empty.FromString,
                 _registered_method=True)
-        self.StartTemperatureRamp = channel.unary_unary(
+        self.StartTemperatureRamp = channel.unary_stream(
                 '/Eurotherm/StartTemperatureRamp',
                 request_serializer=service__pb2.StartTemperatureRampRequest.SerializeToString,
-                response_deserializer=service__pb2.Empty.FromString,
+                response_deserializer=service__pb2.TemperatureRampValue.FromString,
                 _registered_method=True)
         self.ManageTemperatureRamp = channel.unary_unary(
                 '/Eurotherm/ManageTemperatureRamp',
@@ -185,10 +185,10 @@ def add_EurothermServicer_to_server(servicer, server):
                     request_deserializer=service__pb2.SetRemoteSetpointRequest.FromString,
                     response_serializer=service__pb2.Empty.SerializeToString,
             ),
-            'StartTemperatureRamp': grpc.unary_unary_rpc_method_handler(
+            'StartTemperatureRamp': grpc.unary_stream_rpc_method_handler(
                     servicer.StartTemperatureRamp,
                     request_deserializer=service__pb2.StartTemperatureRampRequest.FromString,
-                    response_serializer=service__pb2.Empty.SerializeToString,
+                    response_serializer=service__pb2.TemperatureRampValue.SerializeToString,
             ),
             'ManageTemperatureRamp': grpc.unary_unary_rpc_method_handler(
                     servicer.ManageTemperatureRamp,
@@ -384,12 +384,12 @@ class Eurotherm(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(
+        return grpc.experimental.unary_stream(
             request,
             target,
             '/Eurotherm/StartTemperatureRamp',
             service__pb2.StartTemperatureRampRequest.SerializeToString,
-            service__pb2.Empty.FromString,
+            service__pb2.TemperatureRampValue.FromString,
             options,
             channel_credentials,
             insecure,

@@ -28,10 +28,12 @@ app_logging:
       formatter: rich
       markup: False
     file:
-      class: logging.FileHandler
+      class: logging.handlers.TimedRotatingFileHandler
       formatter: simple
       filename: .eurotherm.log
-      mode: a
+      encoding: utf-8
+      when: "d"
+      interval: 1
   root:
     level: INFO
     handlers:

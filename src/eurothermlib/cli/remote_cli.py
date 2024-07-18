@@ -1,4 +1,6 @@
+from datetime import timedelta
 import logging
+import time
 
 import click
 import grpc
@@ -6,10 +8,18 @@ from rich.pretty import pretty_repr
 
 from eurothermlib.configuration import Config
 from eurothermlib.controllers.controller import InstrumentStatus
-from eurothermlib.utils import TemperatureQ, TemperatureRateQ
+from eurothermlib.utils import TemperatureQ, TemperatureRateQ, TimeQ
 
 from ..server import servicer
-from .cli import cli, device_option, validate_temperature, validate_temperature_rate
+from .cli import (
+    cli,
+    device_option,
+    validate_temperature,
+    validate_temperature_rate,
+    validate_time,
+)
+import reactivex as rx
+import reactivex.operators as op
 
 logger = logging.getLogger(__name__)
 
@@ -122,7 +132,26 @@ def ramp():
     callback=validate_temperature_rate,
     help='The rate at which the temeprature will increase, e.g. 2K/min',
 )
-def start(ctx, temperature: TemperatureQ, rate: TemperatureRateQ, device: str):
+@click.option(
+    '-i',
+    '--interval',
+    type=str,
+    default='15s',
+    show_default=True,
+    callback=validate_time,
+    help=(
+        'The time interval at which the current ramp '
+        'value is displayed/logged to reduce clutter '
+        'on the log file.'
+    ),
+)
+def start(
+    ctx,
+    temperature: TemperatureQ,
+    rate: TemperatureRateQ,
+    device: str,
+    interval: TimeQ,
+):
     """Starts a temperature ramp.
 
     The ramp starts from the current temperature with an
@@ -146,7 +175,14 @@ def start(ctx, temperature: TemperatureQ, rate: TemperatureRateQ, device: str):
         client = servicer.connect(cfg.server)
         client.is_alive()
 
-        client.start_temperature_ramp(device, temperature, rate)
+        last = time.monotonic()
+        dt = interval.m_as('s')
+        for T in client.start_temperature_ramp(device, temperature, rate):
+            current = time.monotonic()
+            if current - last >= dt:
+                logger.info(f'Temperature: {T.to("°C"):.2f~P}')
+                last = current
+
     except grpc.RpcError as ex:
         logger.error('Remote RPC call failed.')
         logger.error(ex)

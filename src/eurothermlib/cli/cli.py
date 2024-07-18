@@ -9,7 +9,7 @@ from rich.pretty import pretty_repr
 from rich.traceback import install
 
 from eurothermlib.server import servicer
-from eurothermlib.utils import TemperatureQ, TemperatureRateQ
+from eurothermlib.utils import TemperatureQ, TemperatureRateQ, TimeQ
 
 from ..configuration import Config, get_configuration
 
@@ -59,6 +59,16 @@ def device_option(f):
     return wrapper_common_options
 
 
+def validate_time(ctx: click.Context, param, value):
+    try:
+        return TimeQ._validate(value)
+    except ValueError as ex:
+        logger.error(str(ex))
+        raise click.BadParameter(
+            f"units of {value} are incompatible with [temperature]."
+        )
+
+
 def validate_temperature(ctx: click.Context, param, value):
     try:
         return TemperatureQ._validate(value)
@@ -81,10 +91,19 @@ def validate_temperature_rate(ctx: click.Context, param, value):
 
 @click.group
 @click.pass_context
-def cli(ctx: click.Context):
+@click.option(
+    '-c',
+    '--config',
+    'config_filename',
+    type=str,
+    default='.eurotherm.yaml',
+    show_default=True,
+    help='''The name/path of the configuration file.''',
+)
+def cli(ctx: click.Context, config_filename: str):
 
     # load configuration
-    config = get_configuration()
+    config = get_configuration(filename=config_filename)
     if config.app_logging is not None:
         logging.config.dictConfig(config.app_logging)
 
@@ -126,6 +145,7 @@ def current(ctx: click.Context, device: str, unit: str):
         logger.info(f'workingSetpoint={values.workingSetpoint.to(unit):.2f~#P}')
         logger.info(f'remoteSetpoint={values.remoteSetpoint.to(unit):.2f~#P}')
         logger.info(f'workingOutput={values.workingOutput:.2f~#P}')
+        logger.info(f'rampStatus={repr(values.rampStatus)}')
         logger.info(f'status={repr(values.status)}')
     except grpc.RpcError as ex:
         logger.error('Remote RPC call failed.')
