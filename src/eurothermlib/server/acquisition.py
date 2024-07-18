@@ -270,10 +270,11 @@ class IOThread(threading.Thread):
         with self._lock:
             logger.debug('...lock acquired.')
             if self.ramp_status == TemperatureRampState.Running:
-                msg = 'Found active temperature ramp: {0:.2f~P} to {1:.2f~P} @ {2:.2f~P}'.format(
-                    self._ramp_thread.T_start,
-                    self._ramp_thread.T_end,
-                    self._ramp_thread.rate,
+                msg = (
+                    f'Found active temperature ramp: '
+                    f'{self._ramp_thread.T_start:.2f~P} to '
+                    f'{self._ramp_thread.T_end:.2f~P} @ '
+                    f'{self._ramp_thread.rate:.2f~P}'
                 )
                 logger.info(msg)
                 logger.info('Cancelling active ramp...')

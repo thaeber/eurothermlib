@@ -1,9 +1,6 @@
 from __future__ import annotations
 
-import logging
-from itertools import cycle
 
-from reactivex.scheduler import ThreadPoolScheduler
 from textual.app import ComposeResult
 from textual.containers import Grid
 from textual.screen import ModalScreen

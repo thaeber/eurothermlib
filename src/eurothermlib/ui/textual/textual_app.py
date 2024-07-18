@@ -45,7 +45,6 @@ class EurothermApp(App):
         self.cfg = config
 
     def connect_to_server(self):
-
         def on_error(ex: Exception = None):
             self.call_from_thread(
                 self.handle_connection_lost, EurothermApp.ConnectionLost(ex)
@@ -67,7 +66,6 @@ class EurothermApp(App):
         self.connect_to_server()
 
     def handle_connection_lost(self, event: EurothermApp.ConnectionLost):
-
         def check_result(reconnect: bool):
             if reconnect:
                 self.connect_to_server()

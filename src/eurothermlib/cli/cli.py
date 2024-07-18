@@ -101,7 +101,6 @@ def validate_temperature_rate(ctx: click.Context, param, value):
     help='''The name/path of the configuration file.''',
 )
 def cli(ctx: click.Context, config_filename: str):
-
     # load configuration
     config = get_configuration(filename=config_filename)
     if config.app_logging is not None:

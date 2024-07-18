@@ -56,7 +56,6 @@ class StatusDisplay(Static):
 
 
 class RampStatusLabel(Widget):
-
     status = reactive(TemperatureRampState.NoRamp)
 
     def render(self):

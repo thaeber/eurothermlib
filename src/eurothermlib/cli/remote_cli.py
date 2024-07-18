@@ -1,4 +1,3 @@
-from datetime import timedelta
 import logging
 import time
 
@@ -18,8 +17,6 @@ from .cli import (
     validate_temperature_rate,
     validate_time,
 )
-import reactivex as rx
-import reactivex.operators as op
 
 logger = logging.getLogger(__name__)
 
