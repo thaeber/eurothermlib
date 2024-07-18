@@ -26,8 +26,7 @@ from .proto import service_pb2
 
 class TemperatureRampState(IntFlag):
     NoRamp = auto()
-    Ramping = auto()
-    Holding = auto()
+    Running = auto()
     Stopped = auto()
     Finished = auto()
 
@@ -177,6 +176,9 @@ class EurothermIO(metaclass=SingletonMeta):
         observable = self._get_thread(device).start_temperature_ramp(to, rate)
         return observable.pipe(op.observe_on(self._pool))
 
+    def stop_temperature_ramp(self, device: str):
+        self._get_thread(device).stop_temperature_ramp()
+
     def acknowledge_all_alarms(self, device: str):
         if device == '*':
             logger.info('Acknowledge alarms on all devices')
@@ -253,7 +255,7 @@ class IOThread(threading.Thread):
             elif not self._ramp_thread.is_alive():
                 return TemperatureRampState.Finished
             else:
-                return TemperatureRampState.Ramping
+                return TemperatureRampState.Running
 
     def toggle_remote_setpoint(self, state: RemoteSetpointState):
         if not self.cancelled:
@@ -267,7 +269,7 @@ class IOThread(threading.Thread):
         logger.debug('Acquire lock...')
         with self._lock:
             logger.debug('...lock acquired.')
-            if self.ramp_status == TemperatureRampState.Ramping:
+            if self.ramp_status == TemperatureRampState.Running:
                 msg = 'Found active temperature ramp: {0:.2f~P} to {1:.2f~P} @ {2:.2f~P}'.format(
                     self._ramp_thread.T_start,
                     self._ramp_thread.T_end,
@@ -293,6 +295,20 @@ class IOThread(threading.Thread):
             self._ramp_thread.start()
 
             return self._ramp_thread.observable
+
+    def stop_temperature_ramp(self):
+        with self._lock:
+            if not (self.ramp_status == TemperatureRampState.Running):
+                logger.warning(self.msg('There is no active temperature ramp.'))
+                return
+
+            logger.info(self.msg('Stopping temperature ramp.'))
+            self._ramp_thread.cancel()
+
+            logger.info(self.msg('Waiting for temperture ramp to stop...'))
+            self._ramp_thread.join()
+
+            logger.info(self.msg('...stopped'))
 
     def emit(self, values: ProcessValues):
         data = TData(
@@ -331,6 +347,9 @@ class IOThread(threading.Thread):
                 self.controller.write_remote_setpoint(self.remote_setpoint)
 
             time.sleep(sampling_interval)
+
+    def msg(self, text: str):
+        return f'[{repr(self.device.name)}] {text}'
 
 
 class TemperatureRampThread(threading.Thread):

@@ -74,9 +74,9 @@ class EurothermStub(object):
                 request_serializer=service__pb2.StartTemperatureRampRequest.SerializeToString,
                 response_deserializer=service__pb2.TemperatureRampValue.FromString,
                 _registered_method=True)
-        self.ManageTemperatureRamp = channel.unary_unary(
-                '/Eurotherm/ManageTemperatureRamp',
-                request_serializer=service__pb2.ManageTemperatureRampRequest.SerializeToString,
+        self.StopTemperatureRamp = channel.unary_unary(
+                '/Eurotherm/StopTemperatureRamp',
+                request_serializer=service__pb2.StopTemperatureRampRequest.SerializeToString,
                 response_deserializer=service__pb2.Empty.FromString,
                 _registered_method=True)
         self.AcknowledgeAllAlarms = channel.unary_unary(
@@ -138,7 +138,7 @@ class EurothermServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
-    def ManageTemperatureRamp(self, request, context):
+    def StopTemperatureRamp(self, request, context):
         """hold/resume/stop temperature ramp
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
@@ -190,9 +190,9 @@ def add_EurothermServicer_to_server(servicer, server):
                     request_deserializer=service__pb2.StartTemperatureRampRequest.FromString,
                     response_serializer=service__pb2.TemperatureRampValue.SerializeToString,
             ),
-            'ManageTemperatureRamp': grpc.unary_unary_rpc_method_handler(
-                    servicer.ManageTemperatureRamp,
-                    request_deserializer=service__pb2.ManageTemperatureRampRequest.FromString,
+            'StopTemperatureRamp': grpc.unary_unary_rpc_method_handler(
+                    servicer.StopTemperatureRamp,
+                    request_deserializer=service__pb2.StopTemperatureRampRequest.FromString,
                     response_serializer=service__pb2.Empty.SerializeToString,
             ),
             'AcknowledgeAllAlarms': grpc.unary_unary_rpc_method_handler(
@@ -401,7 +401,7 @@ class Eurotherm(object):
             _registered_method=True)
 
     @staticmethod
-    def ManageTemperatureRamp(request,
+    def StopTemperatureRamp(request,
             target,
             options=(),
             channel_credentials=None,
@@ -414,8 +414,8 @@ class Eurotherm(object):
         return grpc.experimental.unary_unary(
             request,
             target,
-            '/Eurotherm/ManageTemperatureRamp',
-            service__pb2.ManageTemperatureRampRequest.SerializeToString,
+            '/Eurotherm/StopTemperatureRamp',
+            service__pb2.StopTemperatureRampRequest.SerializeToString,
             service__pb2.Empty.FromString,
             options,
             channel_credentials,

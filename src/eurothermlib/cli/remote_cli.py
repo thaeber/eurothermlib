@@ -115,11 +115,11 @@ def set(ctx: click.Context, temperature: TemperatureQ, device: str):
 
 @remote.group()
 def ramp():
-    """Start/stop temeprature ramp"""
+    """Start/stop temperature ramp"""
     pass
 
 
-@ramp.command(short_help='Set the remote setpoint')
+@ramp.command(short_help='Start temperature ramp with selectable rate.')
 @click.pass_context
 @device_option
 @click.argument('temperature', callback=validate_temperature)
@@ -182,6 +182,26 @@ def start(
             if current - last >= dt:
                 logger.info(f'Temperature: {T.to("°C"):.2f~P}')
                 last = current
+
+    except grpc.RpcError as ex:
+        logger.error('Remote RPC call failed.')
+        logger.error(ex)
+
+
+@ramp.command(short_help='Stop running temperature ramp.')
+@click.pass_context
+@device_option
+def stop(
+    ctx,
+    device: str,
+):
+    """Stop a running temperature ramp."""
+    cfg: Config = ctx.obj['config']
+    try:
+        client = servicer.connect(cfg.server)
+        client.is_alive()
+
+        client.stop_temperature_ramp(device)
 
     except grpc.RpcError as ex:
         logger.error('Remote RPC call failed.')

@@ -61,8 +61,8 @@ class EurothermStub:
     ]
     """start remote temperature ramp"""
 
-    ManageTemperatureRamp: grpc.UnaryUnaryMultiCallable[
-        service_pb2.ManageTemperatureRampRequest,
+    StopTemperatureRamp: grpc.UnaryUnaryMultiCallable[
+        service_pb2.StopTemperatureRampRequest,
         service_pb2.Empty,
     ]
     """hold/resume/stop temperature ramp"""
@@ -116,8 +116,8 @@ class EurothermAsyncStub:
     ]
     """start remote temperature ramp"""
 
-    ManageTemperatureRamp: grpc.aio.UnaryUnaryMultiCallable[
-        service_pb2.ManageTemperatureRampRequest,
+    StopTemperatureRamp: grpc.aio.UnaryUnaryMultiCallable[
+        service_pb2.StopTemperatureRampRequest,
         service_pb2.Empty,
     ]
     """hold/resume/stop temperature ramp"""
@@ -186,9 +186,9 @@ class EurothermServicer(metaclass=abc.ABCMeta):
         """start remote temperature ramp"""
 
     @abc.abstractmethod
-    def ManageTemperatureRamp(
+    def StopTemperatureRamp(
         self,
-        request: service_pb2.ManageTemperatureRampRequest,
+        request: service_pb2.StopTemperatureRampRequest,
         context: _ServicerContext,
     ) -> typing.Union[service_pb2.Empty, collections.abc.Awaitable[service_pb2.Empty]]:
         """hold/resume/stop temperature ramp"""

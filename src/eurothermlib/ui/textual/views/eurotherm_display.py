@@ -39,11 +39,11 @@ class StatusDisplay(Static):
 
     def compose(self) -> ComposeResult:
         yield StatusLabel('OK', id='ok')
-        yield StatusLabel('NewAlarm', id='alarm')
-        yield StatusLabel('SensorBreak', id='sensorBreak')
-        yield StatusLabel('RemoteSPFail', id='remoteSPFail')
+        yield StatusLabel('New Alarm', id='alarm')
+        yield StatusLabel('Sensor Break', id='sensorBreak')
+        yield StatusLabel('Remote SP Fail', id='remoteSPFail')
         yield StatusLabel('')
-        yield StatusLabel('UseRemoteSP', id='useRemoteSP')
+        yield StatusLabel('Using Remote SP', id='useRemoteSP')
 
     def watch_status(self, status: InstrumentStatus):
         self.query_one('#ok').state = InstrumentStatus.Ok in status
@@ -60,19 +60,27 @@ class RampStatusLabel(Widget):
     status = reactive(TemperatureRampState.NoRamp)
 
     def render(self):
-        label = 'no ramp'
+        label = 'No Ramp'
 
         match self.status:
-            case TemperatureRampState.Ramping:
-                label = 'running'
-            case TemperatureRampState.Holding:
-                label = 'holding'
+            case TemperatureRampState.Running:
+                label = 'Running'
             case TemperatureRampState.Stopped:
-                label = 'stopped'
+                label = 'Stopped'
             case TemperatureRampState.Finished:
-                label = 'finished'
+                label = 'Finished'
 
         return label
+
+    def watch_status(self, status: TemperatureRampState):
+        self.remove_class('running', 'stopped', 'finished')
+        match status:
+            case TemperatureRampState.Running:
+                self.add_class('running')
+            case TemperatureRampState.Stopped:
+                self.add_class('stopped')
+            case TemperatureRampState.Finished:
+                self.add_class('finished')
 
 
 class TemperatureDisplay(Digits):

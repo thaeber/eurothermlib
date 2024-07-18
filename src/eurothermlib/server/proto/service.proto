@@ -26,7 +26,7 @@ service Eurotherm {
     rpc StartTemperatureRamp(StartTemperatureRampRequest) returns (stream TemperatureRampValue) {}
 
     // hold/resume/stop temperature ramp
-    rpc ManageTemperatureRamp(ManageTemperatureRampRequest) returns (Empty) {}
+    rpc StopTemperatureRamp(StopTemperatureRampRequest) returns (Empty) {}
 
     // acknowledge all alarms
     rpc AcknowledgeAllAlarms(AcknowlegdeAllAlarmsRequest) returns (Empty) {}
@@ -88,15 +88,8 @@ message TemperatureRampValue {
     double current = 2;  // current temperature [K]
 }
 
-enum TemperatureRampAction {
-    HOLD = 0;
-    RESUME = 1;
-    STOP = 2;
-}
-
-message ManageTemperatureRampRequest {
+message StopTemperatureRampRequest {
     string deviceName = 1;
-    TemperatureRampAction action = 2;
 }
 
 message AcknowlegdeAllAlarmsRequest {

@@ -210,6 +210,19 @@ class EurothermServicer(service_pb2_grpc.EurothermServicer):
             subscription.dispose()
             logger.info('...temprature ramp stream stopped.')
 
+    def StopTemperatureRamp(
+        self,
+        request: service_pb2.StopTemperatureRampRequest,
+        context: grpc.ServicerContext,
+    ) -> service_pb2.Empty | Awaitable[service_pb2.Empty]:
+        # start acquisition thread if necessary
+        self.io.start()
+
+        logger.info(f'[Request] [{repr(request.deviceName)}] Stop temperature ramp')
+        self.io.stop_temperature_ramp(request.deviceName)
+
+        return service_pb2.Empty()
+
     def AcknowledgeAllAlarms(
         self,
         request: service_pb2.AcknowlegdeAllAlarmsRequest,
@@ -291,6 +304,11 @@ class EurothermClient:
         )
         for response in self._client.StartTemperatureRamp(request):
             yield TemperatureQ(response.current, 'K')
+
+    def stop_temperature_ramp(self, device: str):
+        logger.info((f'[{repr(device)}] ' f'Stopping temperature ramp'))
+        request = service_pb2.StopTemperatureRampRequest(deviceName=device)
+        self._client.StopTemperatureRamp(request)
 
     def acknowledge_all_alarms(self, device: str):
         logger.info(f'[{repr(device)}] Acknowledging all alarms')
