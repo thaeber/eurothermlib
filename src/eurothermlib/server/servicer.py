@@ -31,7 +31,7 @@ class EurothermServicer(service_pb2_grpc.EurothermServicer):
         context: grpc.ServicerContext,
     ):
         logger.info('[Request] StopServer')
-        self.io.complete()  # stop data acquisition
+        self.io.stop()  # stop data acquisition
         self.stop_event.set()
         return service_pb2.Empty()
 
