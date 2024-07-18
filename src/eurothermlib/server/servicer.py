@@ -63,12 +63,7 @@ class EurothermServicer(service_pb2_grpc.EurothermServicer):
             logger.exception('Error on observable.', exc_info=e)
             finished.set()
 
-        def log(x):
-            logger.info(x)
-            return x
-
         observable = self.io.observable
-
         subscription = observable.subscribe(
             q.put,
             on_completed=finished.set,
@@ -87,6 +82,8 @@ class EurothermServicer(service_pb2_grpc.EurothermServicer):
                     yield da.to_grpc_response()
                 except EmptyError:
                     pass
+        except Exception as ex:
+            logger.error(ex)
         finally:
             # dispose subscription once iteration completes or terminates
             subscription.dispose()
@@ -164,22 +161,54 @@ class EurothermServicer(service_pb2_grpc.EurothermServicer):
         request: service_pb2.StartTemperatureRampRequest,
         context: grpc.ServicerContext,
     ):
-        # start acquisition thread if necessary
-        self.io.start()
-
         device = request.deviceName
         to = TemperatureQ(request.target, 'K')
         rate = TemperatureRateQ(request.rate, 'K/min')
-
         logger.info(
             (
                 f'[Request] [{repr(device)}] '
                 f'Temperature ramp to {to:.2f~P} @ {rate:.2f~P}'
             )
         )
-        self.io.start_temperature_ramp(device, to, rate)
 
-        return service_pb2.Empty()
+        # start acquisition thread if necessary
+        self.io.start()
+
+        # place streamed values into a synchronized queue
+        # (this works because the observable emits all values
+        # on a different ThreadPool thread)
+        q = Queue[TemperatureQ]()
+        finished = threading.Event()
+
+        def errored(e: Exception):
+            logger.exception('Error on observable.', exc_info=e)
+            finished.set()
+
+        observable = self.io.start_temperature_ramp(device, to, rate)
+        subscription = observable.subscribe(
+            q.put,
+            on_completed=finished.set,
+            on_error=errored,
+        )
+
+        def cancel():
+            return finished.is_set() or self.stop_event.is_set()
+
+        try:
+            logger.info('Starting temperature ramp stream...')
+            while not cancel():
+                try:
+                    value = q.get(timeout=5)
+                    # _logger.info(f'Yielding at {timestamp}')
+                    yield service_pb2.TemperatureRampValue(
+                        deviceName=device, current=value.m_as('K')
+                    )
+                except EmptyError:
+                    pass
+        finally:
+            # dispose subscription once iteration completes or terminates
+            subscription.dispose()
+            logger.info('...temprature ramp stream stopped.')
 
     def AcknowledgeAllAlarms(
         self,
@@ -260,7 +289,8 @@ class EurothermClient:
             target=to.m_as('K'),
             rate=rate.m_as('K/min'),
         )
-        self._client.StartTemperatureRamp(request)
+        for response in self._client.StartTemperatureRamp(request):
+            yield TemperatureQ(response.current, 'K')
 
     def acknowledge_all_alarms(self, device: str):
         logger.info(f'[{repr(device)}] Acknowledging all alarms')

@@ -222,6 +222,25 @@ class StartTemperatureRampRequest(google.protobuf.message.Message):
 global___StartTemperatureRampRequest = StartTemperatureRampRequest
 
 @typing.final
+class TemperatureRampValue(google.protobuf.message.Message):
+    DESCRIPTOR: google.protobuf.descriptor.Descriptor
+
+    DEVICENAME_FIELD_NUMBER: builtins.int
+    CURRENT_FIELD_NUMBER: builtins.int
+    deviceName: builtins.str
+    current: builtins.float
+    """current temperature [K]"""
+    def __init__(
+        self,
+        *,
+        deviceName: builtins.str = ...,
+        current: builtins.float = ...,
+    ) -> None: ...
+    def ClearField(self, field_name: typing.Literal["current", b"current", "deviceName", b"deviceName"]) -> None: ...
+
+global___TemperatureRampValue = TemperatureRampValue
+
+@typing.final
 class ManageTemperatureRampRequest(google.protobuf.message.Message):
     DESCRIPTOR: google.protobuf.descriptor.Descriptor
 
@@ -315,8 +334,8 @@ class Eurotherm(google.protobuf.service.Service, metaclass=abc.ABCMeta):
         inst: Eurotherm,  # pyright: ignore[reportSelfClsParameterName]
         rpc_controller: google.protobuf.service.RpcController,
         request: global___StartTemperatureRampRequest,
-        callback: collections.abc.Callable[[global___Empty], None] | None,
-    ) -> concurrent.futures.Future[global___Empty]:
+        callback: collections.abc.Callable[[global___TemperatureRampValue], None] | None,
+    ) -> concurrent.futures.Future[global___TemperatureRampValue]:
         """start remote temperature ramp"""
 
     @abc.abstractmethod
@@ -392,8 +411,8 @@ class Eurotherm_Stub(Eurotherm):
         inst: Eurotherm_Stub,  # pyright: ignore[reportSelfClsParameterName]
         rpc_controller: google.protobuf.service.RpcController,
         request: global___StartTemperatureRampRequest,
-        callback: collections.abc.Callable[[global___Empty], None] | None = ...,
-    ) -> concurrent.futures.Future[global___Empty]:
+        callback: collections.abc.Callable[[global___TemperatureRampValue], None] | None = ...,
+    ) -> concurrent.futures.Future[global___TemperatureRampValue]:
         """start remote temperature ramp"""
 
     def ManageTemperatureRamp(

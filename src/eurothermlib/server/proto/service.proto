@@ -23,7 +23,7 @@ service Eurotherm {
     rpc SetRemoteSetpoint(SetRemoteSetpointRequest) returns (Empty) {}
 
     // start remote temperature ramp
-    rpc StartTemperatureRamp(StartTemperatureRampRequest) returns (Empty) {}
+    rpc StartTemperatureRamp(StartTemperatureRampRequest) returns (stream TemperatureRampValue) {}
 
     // hold/resume/stop temperature ramp
     rpc ManageTemperatureRamp(ManageTemperatureRampRequest) returns (Empty) {}
@@ -81,6 +81,11 @@ message StartTemperatureRampRequest {
     string deviceName = 1;
     double target = 2;  // target temperature [K]
     double rate = 3;  // rate of change [K/min]
+}
+
+message TemperatureRampValue {
+    string deviceName = 1;
+    double current = 2;  // current temperature [K]
 }
 
 enum TemperatureRampAction {

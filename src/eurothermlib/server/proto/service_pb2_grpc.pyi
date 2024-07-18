@@ -55,9 +55,9 @@ class EurothermStub:
     ]
     """set remote setpoint"""
 
-    StartTemperatureRamp: grpc.UnaryUnaryMultiCallable[
+    StartTemperatureRamp: grpc.UnaryStreamMultiCallable[
         service_pb2.StartTemperatureRampRequest,
-        service_pb2.Empty,
+        service_pb2.TemperatureRampValue,
     ]
     """start remote temperature ramp"""
 
@@ -110,9 +110,9 @@ class EurothermAsyncStub:
     ]
     """set remote setpoint"""
 
-    StartTemperatureRamp: grpc.aio.UnaryUnaryMultiCallable[
+    StartTemperatureRamp: grpc.aio.UnaryStreamMultiCallable[
         service_pb2.StartTemperatureRampRequest,
-        service_pb2.Empty,
+        service_pb2.TemperatureRampValue,
     ]
     """start remote temperature ramp"""
 
@@ -182,7 +182,7 @@ class EurothermServicer(metaclass=abc.ABCMeta):
         self,
         request: service_pb2.StartTemperatureRampRequest,
         context: _ServicerContext,
-    ) -> typing.Union[service_pb2.Empty, collections.abc.Awaitable[service_pb2.Empty]]:
+    ) -> typing.Union[collections.abc.Iterator[service_pb2.TemperatureRampValue], collections.abc.AsyncIterator[service_pb2.TemperatureRampValue]]:
         """start remote temperature ramp"""
 
     @abc.abstractmethod

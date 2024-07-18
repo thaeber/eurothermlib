@@ -27,6 +27,15 @@ CurrentValuesDisplay {
             border: round $primary;
         }
     }
+
+    #acquire {
+        dock: right;
+        background: $boost;
+
+        &.on {
+            background: $success;
+        }
+    }
 }
 
 TemperatureDisplay {
@@ -45,9 +54,18 @@ DataTable {
     margin-bottom: 1;
 }
 
+RampStatusLabel {
+    height: 1;
+    background: $boost;
+    padding-left: 1;
+    padding-right: 1;
+    margin-left: 1;
+    margin-right: 1;
+}
+
 StatusDisplay {
     layout: grid;
-    grid-size: 2 2;
+    grid-size: 2 3;
     grid-columns: 1fr 1fr 1fr 1fr;
     /* margin: 1; */
     border: round $primary 20%;
@@ -86,6 +104,10 @@ StatusDisplay .enabled {
 
     &#remoteSPFail {
         background: $error;
+    }
+
+    &#useRemoteSP {
+        background: $accent;
     }
 }
 
