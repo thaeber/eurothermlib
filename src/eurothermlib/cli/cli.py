@@ -10,8 +10,50 @@ from rich.traceback import install
 
 from eurothermlib.server import servicer
 from eurothermlib.utils import TemperatureQ, TemperatureRateQ, TimeQ
+from omegaconf import OmegaConf
 
 from ..configuration import Config, get_configuration
+
+
+# logging config
+app_logging_config = """
+app_logging:
+  version: 1
+  formatters:
+    simple:
+      format: "[%(asctime)s][%(levelname)s][%(thread)s][%(filename)s:%(lineno)d] - %(message)s"
+      datefmt: "%Y-%m-%d %H:%M:%S"
+    rich:
+      format: "[%(thread)s] %(message)s"
+  handlers:
+    textual:
+      class: textual.logging.TextualHandler
+      formatter: rich
+    console:
+      class: rich.logging.RichHandler
+      formatter: rich
+      markup: False
+    file:
+      class: logging.handlers.TimedRotatingFileHandler
+      formatter: simple
+      filename: .eurotherm.log
+      encoding: utf-8
+      when: "d"
+      interval: 1
+  root:
+    level: INFO
+    handlers:
+      - console
+      - file
+      # - textual
+  disable_existing_loggers: false
+"""
+logging.config.dictConfig(
+    OmegaConf.to_object(
+        OmegaConf.create(app_logging_config).app_logging,
+    )
+)
+
 
 logger = logging.getLogger(__name__)
 
@@ -103,8 +145,8 @@ def validate_temperature_rate(ctx: click.Context, param, value):
 def cli(ctx: click.Context, config_filename: str):
     # load configuration
     config = get_configuration(filename=config_filename)
-    if config.app_logging is not None:
-        logging.config.dictConfig(config.app_logging)
+    # if config.app_logging is not None:
+    #     logging.config.dictConfig(config.app_logging)
 
     # log original command
     logger.info(f'[cli] eurotherm {" ".join(sys.argv[1:])}')

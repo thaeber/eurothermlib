@@ -10,34 +10,42 @@ devices:
       port: COM7
       buadRate: 19200
 
+logging:
+  directory: ./output/{:%Y-%m-%d}
+  filename: eurotherm-{:%Y-%m-%dT%H-%M-%S}.txt
+  temperature_unit: K
+  format: "%.6g"
+  separator: ";"
+  rotate_every: 30s
+  write_interval: 10s
 
-app_logging:
-  version: 1
-  formatters:
-    simple:
-      format: "[%(asctime)s][%(levelname)s][%(thread)s][%(filename)s:%(lineno)d] - %(message)s"
-      datefmt: "%Y-%m-%d %H:%M:%S"
-    rich:
-      format: "[%(thread)s] %(message)s"
-  handlers:
-    textual:
-      class: textual.logging.TextualHandler
-      formatter: rich
-    console:
-      class: rich.logging.RichHandler
-      formatter: rich
-      markup: False
-    file:
-      class: logging.handlers.TimedRotatingFileHandler
-      formatter: simple
-      filename: .eurotherm.log
-      encoding: utf-8
-      when: "d"
-      interval: 1
-  root:
-    level: INFO
-    handlers:
-      - console
-      - file
-      # - textual
-  disable_existing_loggers: false
+# app_logging:
+#   version: 1
+#   formatters:
+#     simple:
+#       format: "[%(asctime)s][%(levelname)s][%(thread)s][%(filename)s:%(lineno)d] - %(message)s"
+#       datefmt: "%Y-%m-%d %H:%M:%S"
+#     rich:
+#       format: "[%(thread)s] %(message)s"
+#   handlers:
+#     textual:
+#       class: textual.logging.TextualHandler
+#       formatter: rich
+#     console:
+#       class: rich.logging.RichHandler
+#       formatter: rich
+#       markup: False
+#     file:
+#       class: logging.handlers.TimedRotatingFileHandler
+#       formatter: simple
+#       filename: .eurotherm.log
+#       encoding: utf-8
+#       when: "d"
+#       interval: 1
+#   root:
+#     level: INFO
+#     handlers:
+#       - console
+#       - file
+#       # - textual
+#   disable_existing_loggers: false

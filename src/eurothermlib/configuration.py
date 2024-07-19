@@ -7,19 +7,13 @@ from pathlib import Path
 from typing import Annotated, Any, Dict, List, Literal, Optional
 
 from omegaconf import OmegaConf
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 from rich.pretty import pretty_repr
 
 from .utils import FrequencyQ, TimeQ
 
-OmegaConf.register_new_resolver('now', lambda fmt: datetime.now().strftime(fmt))
-
-# _app_logging_conf = Path('./conf/app_logging.yaml')
-# if _app_logging_conf.exists():
-#     _conf = OmegaConf.load(_app_logging_conf)
-#     logging.config.dictConfig(OmegaConf.to_container(_conf))  # type: ignore
-
 logger = logging.getLogger(__name__)
+OmegaConf.register_new_resolver('now', lambda fmt: datetime.now().strftime(fmt))
 
 
 class ServerConfig(BaseModel):
@@ -44,25 +38,51 @@ class DeviceConfig(BaseModel):
     driver: Driver = 'simulate'
 
 
+class LoggingConfig(BaseModel):
+    directory: str = './output/{:%Y-%m-%d}'
+    filename: str = 'eurotherm-{:%Y-%m-%dT%H-%M-%S}.txt'
+    mode: str = 'w'
+    unit: str = "K"
+    format: str = "%.6g"
+    separator: str = ";"
+    rotate_every: Annotated[TimeQ, Field(validate_default=True)] = '1h'
+    write_interval: Annotated[TimeQ, Field(validate_default=True)] = '10s'
+
+    @model_validator(mode='after')
+    def check_time_intervals(self):
+        if self.write_interval >= self.rotate_every:
+            raise ValueError(
+                (
+                    f'The write interval of data packets '
+                    f'(write_interval={self.write_interval:~P}) must be '
+                    f'shorter than the rotation interval of data files '
+                    f'(rotate_every={self.rotate_every:~P})'
+                )
+            )
+        return self
+
+    @model_validator(mode='after')
+    def check_formatting(self):
+        try:
+            self.directory.format(datetime.now())
+        except:
+            raise ValueError(
+                f'Cannot format directory name with current date/time: {self.directory}'
+            )
+        try:
+            self.filename.format(datetime.now())
+        except:
+            raise ValueError(
+                f'Cannot format directory name with current date/time: {self.filename}'
+            )
+        return self
+
+
 class Config(BaseModel):
     model_config = ConfigDict(extra='forbid')
     server: ServerConfig = ServerConfig()
     devices: List[DeviceConfig]
-    app_logging: Optional[Dict[str, Any]] = None
-
-
-# @dataclass
-# class LoggingConfig:
-#     # target path and filename
-#     dir: str = './outputs/tclogger/${now:%Y-%m-%d}'
-#     filename: str = '${now:%Y-%m-%dT%H-%M-%S}.csv'
-#     mode: str = 'w'
-#     # formatting
-#     unit: str = "kelvin"
-#     format: str = "%.2f"
-#     separator: str = ";"
-#     # timing
-#     write_interval: float = 0.0  # [s]; write readings in groups at given interval
+    logging: LoggingConfig
 
 
 def get_configuration(
