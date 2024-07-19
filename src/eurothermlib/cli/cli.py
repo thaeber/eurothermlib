@@ -116,6 +116,14 @@ def cli(ctx: click.Context, config_filename: str):
 
 @cli.command()
 @click.pass_context
+def config(ctx):
+    """Show configuration."""
+    cfg: Config = ctx.obj['config']
+    logger.info(pretty_repr(cfg))
+
+
+@cli.command()
+@click.pass_context
 @device_option
 @click.option(
     '-u',
