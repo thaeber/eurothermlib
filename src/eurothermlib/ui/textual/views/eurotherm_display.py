@@ -1,22 +1,27 @@
 import logging
 
+import numpy as np
 from reactivex.scheduler import ThreadPoolScheduler
 from rich.text import Text
 from textual.app import ComposeResult
-from textual.containers import Horizontal
+from textual.containers import Horizontal, Vertical
 from textual.reactive import reactive
+from textual.widget import Widget
 from textual.widgets import (
+    Button,
+    Collapsible,
     DataTable,
     Digits,
     Label,
+    Sparkline,
     Static,
-    Button,
-    Collapsible,
+    TabbedContent,
 )
-from textual.widget import Widget
+from textual_plotext import PlotextPlot
 
 from eurothermlib.controllers import InstrumentStatus
 from eurothermlib.server.acquisition import TData, TemperatureRampState
+
 from .setpoint_display import SetpointDisplay
 
 logger = logging.getLogger(__name__)
@@ -174,14 +179,17 @@ class EurothermDisplay(Static):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.time = []
+        self.data = []
 
     def compose(self) -> ComposeResult:
         with Horizontal():
             yield CurrentValuesDisplay(device_name=self.id).data_bind(
                 units=EurothermDisplay.units
             )
-            with Collapsible(title='Setpoint', collapsed=False):
+            with TabbedContent('Remote setpoint', 'Plot'):
                 yield SetpointDisplay().data_bind(units=EurothermDisplay.units)
+                yield PlotextPlot()
 
     def update_values(self, values: TData):
         if values.deviceName == self.id:
@@ -189,6 +197,24 @@ class EurothermDisplay(Static):
             self.query_one(SetpointDisplay).remoteSetpointEnabled = (
                 InstrumentStatus.LocalRemoteSPSelect in values.status
             )
+
+            # append data
+            self.time.append(np.datetime64(values.timestamp))
+            self.data.append(values.processValue)
+
+            # only keep the last 30min
+            while self.time[-1] - self.time[0] > np.timedelta64(15, 'm'):
+                self.time.pop(0)
+                self.data.pop(0)
+
+            time = (np.array(self.time) - self.time[0]) / np.timedelta64(1, 'm')
+            data = [y.m_as(self.units) for y in self.data]
+
+            plt = self.query_one(PlotextPlot).plt
+            plt.clear_data()
+            plt.scatter(time, data)
+            plt.xlabel('minutes')
+            self.query_one(PlotextPlot).refresh()
         else:
             logger.warn(
                 (
@@ -208,3 +234,6 @@ class EurothermDisplay(Static):
             await self.run_action(f'app.disable_remote_setpoint("{self.id}")')
         elif event.button.id == 'button-reset-alarms':
             await self.run_action(f'app.acknowledge_alarms("{self.id}")')
+        elif event.button.id == 'button-setpoint':
+            value = self.query_one(SetpointDisplay).setpoint
+            await self.run_action(f'app.set_remote_setpoint("{self.id}", "{value:~P}")')

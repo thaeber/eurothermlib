@@ -15,6 +15,7 @@ from eurothermlib.configuration import Config, get_configuration
 from eurothermlib.controllers.controller import RemoteSetpointState
 from eurothermlib.server import connect
 from eurothermlib.server.acquisition import TData
+from eurothermlib.utils import TemperatureQ
 
 from .views.error_screen import ErrorScreen
 from .views.eurotherm_display import EurothermDisplay
@@ -100,6 +101,19 @@ class EurothermApp(App):
 
     def action_acknowledge_alarms(self, device):
         self.client.acknowledge_all_alarms(device)
+
+    def action_set_remote_setpoint(self, device: str, value: str):
+        try:
+            temperature = TemperatureQ._validate(value)
+            self.client.set_remote_setpoint(device, temperature)
+
+            response = self.client.current_process_values(device).remoteSetpoint
+            self.notify(
+                f'Remote setpoint set to {response.to(temperature.units):.2f~P}',
+                timeout=4,
+            )
+        except ValueError as ex:
+            self.notify(ex, title='Setpoint', severity='error')
 
 
 def main():

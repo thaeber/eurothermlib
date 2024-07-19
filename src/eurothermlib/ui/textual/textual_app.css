@@ -131,25 +131,55 @@ StatusDisplay .enabled {
     background: $success;
 } */
 
+TabbedContent {
+    width: 1fr;
+}
+
+/* PlotextPlot {
+    width: 100%;
+} */
+
 SetpointDisplay {
     layout: horizontal;
     background: $boost;
     width: 1fr;
-    height: auto;
+    height: 1fr;
     padding: 1;
 
     Label {
-        /* align-vertical: middle; */
-        /* width: 10; */
         margin: 1;
         padding-left: 1;
         padding-right: 1;
+    }
+
+    #label-remote-select {
         color: $text-muted;
     }
 
     #status-group {
         width: auto;
         dock: right;
+    }
+
+    Input {
+        width: 2fr;
+        /* border: solid $primary; */
+        margin: 0;
+    }
+
+    .spacer {
+        width: 1fr;
+    }
+
+    #setpoint-label {
+        width: 1fr;
+        color: $success;
+        /* background: $warning; */
+        margin: 1;
+
+        &.error {
+            color: $error;
+        }
     }
 
     Button {
@@ -160,6 +190,10 @@ SetpointDisplay {
         &#button-disable {
             color: $error;
             border: round $error;
+        }
+
+        &#button-setpoint {
+            border: round $primary;
         }
     }
 
