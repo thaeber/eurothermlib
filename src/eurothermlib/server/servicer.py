@@ -63,7 +63,12 @@ class EurothermServicer(service_pb2_grpc.EurothermServicer):
             logger.exception('Error on observable.', exc_info=e)
             finished.set()
 
-        observable = self.io.observable
+        try:
+            observable = self.io.observable
+        except ValueError as ex:
+            logger.error(ex)
+            return
+
         subscription = observable.subscribe(
             q.put,
             on_completed=finished.set,

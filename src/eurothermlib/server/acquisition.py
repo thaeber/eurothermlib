@@ -108,20 +108,33 @@ class EurothermIO(metaclass=SingletonMeta):
             else:
                 return self._threads[device]
 
-    def _ensure_observable(self):
-        with self._lock:
-            if self._observable is None:
-                self._observable = reactivex.Subject[TData]()
-        return self._observable
+    def _try_get_observable(self):
+        acquired = self._lock.acquire(timeout=2)
+        try:
+            if acquired:
+                if self._observable is None:
+                    logger.info('Creating observable for IO')
+                    self._observable = reactivex.Subject[TData]()
+            else:
+                logger.error('Acquiring lock timed out')
+                return None
+        finally:
+            if acquired:
+                self._lock.release()
+                return self._observable
 
     def _emit(self, data: TData):
-        observable = self._ensure_observable()
-        observable.on_next(data)
+        observable = self._try_get_observable()
+        if observable:
+            observable.on_next(data)
 
     @property
     def observable(self):
-        observable = self._ensure_observable()
-        return observable.pipe(op.observe_on(self._pool))
+        observable = self._try_get_observable()
+        if observable:
+            return observable.pipe(op.observe_on(self._pool))
+        else:
+            raise ValueError('Could not obtain observable')
 
     def start(self):
         with self._lock:
@@ -149,14 +162,21 @@ class EurothermIO(metaclass=SingletonMeta):
     def stop(self):
         self.complete()
         with self._lock:
+            logger.info('Signal completion of process value streams')
+            if self._observable:
+                self._observable.on_completed()
+
             if not self._threads:
                 return
+            logger.info('Cancelling IO threads.')
             for thread in self._iter_threads():
                 thread.cancel()
+            logger.info('Waiting for IO threads to terminate')
             for thread in self._iter_threads():
                 thread.join()
 
             self._threads.clear()
+            logger.info('IO threads terminated')
 
     def complete(self):
         with self._lock:
@@ -222,12 +242,16 @@ class IOThread(threading.Thread):
     def join(self, timeout: float | None = None) -> None:
         with self._lock:
             if self._ramp_thread is not None:
+                logger.info(self.msg('Waiting for ramp thread to terminate.'))
                 self._ramp_thread.join(timeout)
+        logger.info(self.msg('Waiting for thread to terminate'))
         return super().join(timeout)
 
     def cancel(self):
         with self._lock:
+            logger.info(self.msg('Cancelling IO thread'))
             if self._ramp_thread is not None:
+                logger.info(self.msg('Cancelling temperture ramp thread'))
                 self._ramp_thread.cancel()
         self.cancel_event.set()
 
@@ -348,6 +372,8 @@ class IOThread(threading.Thread):
                 self.controller.write_remote_setpoint(self.remote_setpoint)
 
             time.sleep(sampling_interval)
+
+        logger.info(self.msg('IO thread terminated'))
 
     def msg(self, text: str):
         return f'[{repr(self.device.name)}] {text}'

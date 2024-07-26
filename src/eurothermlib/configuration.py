@@ -40,13 +40,22 @@ class DeviceConfig(BaseModel):
 
 class LoggingConfig(BaseModel):
     directory: str = './output/{:%Y-%m-%d}'
-    filename: str = 'eurotherm-{:%Y-%m-%dT%H-%M-%S}.txt'
-    mode: str = 'w'
-    unit: str = "K"
+    filename: str = 'eurotherm-{:%Y-%m-%dT%H-%M-%S}.csv'
     format: str = "%.6g"
     separator: str = ";"
-    rotate_every: Annotated[TimeQ, Field(validate_default=True)] = '1h'
+    rotate_every: Annotated[TimeQ, Field(validate_default=True)] = '1min'
     write_interval: Annotated[TimeQ, Field(validate_default=True)] = '10s'
+    columns: List[str] = [
+        'timestamp',
+        'processValue',
+        'workingOutput',
+        'workingSetpoint',
+    ]
+    units: Dict[str, str] = {
+        'processValue': 'K',
+        'workingOutput': '%',
+        'workingSetpoint': 'K',
+    }
 
     @model_validator(mode='after')
     def check_time_intervals(self):
@@ -82,7 +91,7 @@ class Config(BaseModel):
     model_config = ConfigDict(extra='forbid')
     server: ServerConfig = ServerConfig()
     devices: List[DeviceConfig]
-    logging: LoggingConfig
+    logging: LoggingConfig = LoggingConfig()
 
 
 def get_configuration(

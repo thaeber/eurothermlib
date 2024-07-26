@@ -1,10 +1,13 @@
 import functools
 import logging
 import logging.handlers
+import os
 import sys
 
 import click
 import grpc
+import pandas
+import reactivex
 from rich.pretty import pretty_repr
 from rich.traceback import install
 
@@ -12,20 +15,21 @@ from eurothermlib.server import servicer
 from eurothermlib.utils import TemperatureQ, TemperatureRateQ, TimeQ
 
 from ..configuration import Config, get_configuration
-from ..logging import configure_logging, FileLoggingMode
+from ..logging import AppLoggingMode, configure_app_logging
 
 logger = logging.getLogger(__name__)
 
-install()
+install(suppress=[click, reactivex, grpc, pandas])
+os.environ["GRPC_VERBOSITY"] = "ERROR"
 
 # configure logging
 match sys.argv:
     case [_, 'ui', *rest]:
-        configure_logging(FileLoggingMode.NONE)
+        configure_app_logging(AppLoggingMode.NONE)
     case [_, 'server', 'start']:
-        configure_logging(FileLoggingMode.SERVER)
+        configure_app_logging(AppLoggingMode.SERVER)
     case _:
-        configure_logging(FileLoggingMode.CLIENT)
+        configure_app_logging(AppLoggingMode.CLIENT)
 
 
 def get_command_name(ctx: click.Context):

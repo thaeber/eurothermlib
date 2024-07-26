@@ -1,7 +1,14 @@
 import logging
 from concurrent import futures
+from typing import List
 
 import click
+import pandas as pd
+import reactivex as rx
+import reactivex.operators as op
+
+from eurothermlib.logging import FileDataLogger
+from eurothermlib.server.acquisition import TData
 
 from ..server import servicer
 from .cli import cli, get_configuration
@@ -29,10 +36,31 @@ def start(ctx):
     else:
         future = servicer.serve(cfg)
         try:
+            client = servicer.connect(cfg)
+
+            data_logger = FileDataLogger(cfg.logging)
+
+            def do_log(data: List[TData]):
+                if data:
+                    df = pd.DataFrame(data)
+                    data_logger.log_data(df)
+
+            subscription = (
+                rx.from_iterable(client.stream_process_values())
+                .pipe(
+                    op.buffer_with_time(cfg.logging.write_interval.to_timedelta()),
+                    # op.do(lambda data: data_logger.log_data(pd.DataFrame(data))),
+                )
+                .subscribe(do_log)
+            )
+
             while True:
                 _, not_done = futures.wait([future], timeout=2.0)
                 if not not_done:
                     break
+
+            subscription.dispose()
+
         except KeyboardInterrupt:
             logger.warning('Keyboard interrupt detected. Trying to stop server...')
             client = servicer.connect(cfg.server)

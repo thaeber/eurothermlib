@@ -11,14 +11,18 @@ devices:
       buadRate: 19200
 
 logging:
-  directory: ./output/{:%Y-%m-%d}
+  directory: .output/{:%Y-%m-%d}
   filename: eurotherm-{:%Y-%m-%dT%H-%M-%S}.txt
-  temperature_unit: K
-  format: "%.6g"
+  format: "%.2f"
   separator: ";"
-  rotate_every: 30s
-  write_interval: 10s
-
+  rotate_every: 1h
+  write_interval: 15s
+  columns:
+    - deviceName
+    - timestamp
+    - processValue
+    - workingOutput
+    - workingSetpoint
 # app_logging:
 #   version: 1
 #   formatters:
