@@ -10,54 +10,30 @@ from rich.traceback import install
 
 from eurothermlib.server import servicer
 from eurothermlib.utils import TemperatureQ, TemperatureRateQ, TimeQ
-from omegaconf import OmegaConf
 
 from ..configuration import Config, get_configuration
-
-
-# logging config
-app_logging_config = """
-app_logging:
-  version: 1
-  formatters:
-    simple:
-      format: "[%(asctime)s][%(levelname)s][%(thread)s][%(filename)s:%(lineno)d] - %(message)s"
-      datefmt: "%Y-%m-%d %H:%M:%S"
-    rich:
-      format: "[%(thread)s] %(message)s"
-  handlers:
-    textual:
-      class: textual.logging.TextualHandler
-      formatter: rich
-    console:
-      class: rich.logging.RichHandler
-      formatter: rich
-      markup: False
-    file:
-      class: logging.handlers.TimedRotatingFileHandler
-      formatter: simple
-      filename: .eurotherm.log
-      encoding: utf-8
-      when: "d"
-      interval: 1
-  root:
-    level: INFO
-    handlers:
-      - console
-      - file
-      # - textual
-  disable_existing_loggers: false
-"""
-logging.config.dictConfig(
-    OmegaConf.to_object(
-        OmegaConf.create(app_logging_config).app_logging,
-    )
-)
-
+from ..logging import configure_logging, FileLoggingMode
 
 logger = logging.getLogger(__name__)
 
 install()
+
+# configure logging
+match sys.argv:
+    case [_, 'ui', *rest]:
+        configure_logging(FileLoggingMode.NONE)
+    case [_, 'server', 'start']:
+        configure_logging(FileLoggingMode.SERVER)
+    case _:
+        configure_logging(FileLoggingMode.CLIENT)
+
+
+def get_command_name(ctx: click.Context):
+    names = []
+    while ctx is not None:
+        names.insert(0, ctx.info_name)
+        ctx = ctx.parent
+    return '-'.join(names)
 
 
 def validate_device(ctx: click.Context, param, value):

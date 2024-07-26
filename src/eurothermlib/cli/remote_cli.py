@@ -13,6 +13,7 @@ from ..server import servicer
 from .cli import (
     cli,
     device_option,
+    get_command_name,
     validate_temperature,
     validate_temperature_rate,
     validate_time,
