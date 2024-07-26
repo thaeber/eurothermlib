@@ -3,6 +3,7 @@ import logging
 import logging.handlers
 import os
 import sys
+from time import sleep
 
 import click
 import grpc
@@ -176,6 +177,29 @@ def current(ctx: click.Context, device: str, unit: str):
         logger.info(f'workingOutput={values.workingOutput:.2f~#P}')
         logger.info(f'rampStatus={repr(values.rampStatus)}')
         logger.info(f'status={repr(values.status)}')
+    except grpc.RpcError as ex:
+        logger.error('Remote RPC call failed.')
+        logger.error(ex)
+
+
+@cli.command()
+@click.pass_context
+@click.argument('time', callback=validate_time)
+@device_option
+def hold(ctx: click.Context, time: TimeQ, device: str):
+    """Hold device for a given TIME.
+
+    TIME: The time to hold, e.g. 10min or 1h.
+    """
+    cfg: Config = ctx.obj['config']
+    try:
+        # client = servicer.connect(cfg.server)
+        # client.is_alive()
+
+        logger.info(f'Waiting/holding for {time:~P} ...')
+        sleep(time.m_as('s'))
+        logger.info('..holding time ended')
+
     except grpc.RpcError as ex:
         logger.error('Remote RPC call failed.')
         logger.error(ex)
