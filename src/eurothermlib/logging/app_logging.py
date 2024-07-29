@@ -1,3 +1,4 @@
+from datetime import datetime
 import logging
 import logging.handlers
 from enum import IntFlag, auto
@@ -35,18 +36,16 @@ def configure_app_logging(mode: AppLoggingMode):
                 formatter: rich
                 markup: False
             client:
-                class: eurothermlib.logging.TimedRotatingFileHandler
+                class: eurothermlib.logging.TimeStampedFileHandler
                 formatter: simple
-                filename: ".log/eurotherm.client.log"
+                filename: ".log/client/{0:%Y-%m-%d}/{0:%Y-%m-%dT%H-%M-%S}.log"
                 encoding: utf-8
-                when: "h"
-                interval: 1
             server:
                 class: eurothermlib.logging.TimedRotatingFileHandler
                 formatter: simple
                 filename: ".log/eurotherm.server.log"
                 encoding: utf-8
-                when: "h"
+                when: "d"
                 interval: 1
         root:
             level: INFO
@@ -69,5 +68,12 @@ def configure_app_logging(mode: AppLoggingMode):
 
 class TimedRotatingFileHandler(logging.handlers.TimedRotatingFileHandler):
     def __init__(self, filename, **kwargs):
+        Path(filename).parent.mkdir(parents=True, exist_ok=True)
+        super().__init__(filename, **kwargs)
+
+
+class TimeStampedFileHandler(logging.FileHandler):
+    def __init__(self, filename, **kwargs):
+        filename = filename.format(datetime.now())
         Path(filename).parent.mkdir(parents=True, exist_ok=True)
         super().__init__(filename, **kwargs)
