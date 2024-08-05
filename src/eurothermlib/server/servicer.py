@@ -213,7 +213,7 @@ class EurothermServicer(service_pb2_grpc.EurothermServicer):
         finally:
             # dispose subscription once iteration completes or terminates
             subscription.dispose()
-            logger.info('...temprature ramp stream stopped.')
+            logger.info('...temperature ramp stream stopped.')
 
     def StopTemperatureRamp(
         self,
