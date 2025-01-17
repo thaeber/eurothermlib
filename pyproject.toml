@@ -4,9 +4,7 @@ version = "0.1.0"
 description = "Simple Python package for operating a Eurotherm controller ."
 authors = ["Thomas Haeber <thomas.haeber@kit.edu>"]
 readme = "README.md"
-packages = [
-    { include = "eurothermlib", from = "src" },
-]
+packages = [{ include = "eurothermlib", from = "src" }]
 
 [tool.poetry.scripts]
 eurotherm = 'eurothermlib.cli.cli:cli'
@@ -17,12 +15,12 @@ click = "^8.1.4"
 numpy = "^1.25.1"
 pint = ">=0.24"
 rich = "^13.4.2"
-grpcio = "^1.64.1"
+grpcio = { extras = ["protobuf"], version = "^1.69.0" }
 omegaconf = "^2.3.0"
 pydantic = "^2.7.4"
 xarray = "^2024.6.0"
 reactivex = "^4.0.4"
-pymodbus = {extras = ["serial"], version = "^3.6.9"}
+pymodbus = { extras = ["serial"], version = "^3.6.9" }
 tenacity = "^8.4.2"
 textual = "^0.71.0"
 textual-plotext = "^0.2.1"
@@ -38,7 +36,7 @@ pytest-watcher = "^0.4.2"
 git-changelog = "^2.5.2"
 pre-commit = "^3.7.1"
 bump-my-version = "^0.21.1"
-grpcio-tools = "^1.64.1"
+# grpcio-tools = "^1.64.1"
 grpc-stubs = "^1.53.0.5"
 mypy-protobuf = "^3.6.0"
 matplotlib = "^3.9.0"
