@@ -1,8 +1,6 @@
-from collections import namedtuple
 from datetime import datetime
 import pandas as pd
 import pint
-import pytest
 from eurothermlib.configuration import LoggingConfig
 from eurothermlib.controllers.controller import InstrumentStatus
 from eurothermlib.logging import FileDataLogger

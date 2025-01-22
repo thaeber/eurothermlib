@@ -191,7 +191,7 @@ def hold(ctx: click.Context, time: TimeQ, device: str):
 
     TIME: The time to hold, e.g. 10min or 1h.
     """
-    cfg: Config = ctx.obj['config']
+    ctx.obj['config']
     try:
         # client = servicer.connect(cfg.server)
         # client.is_alive()

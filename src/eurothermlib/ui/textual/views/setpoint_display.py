@@ -1,15 +1,12 @@
 import logging
-import tokenize
 
 from textual import on
 from textual.app import ComposeResult
 from textual.containers import Horizontal, Vertical
 from textual.reactive import reactive
-from textual.validation import Function, ValidationResult, Validator
-from textual.widgets import Button, Input, Label, Static, Pretty, Placeholder
-from textual.widget import Widget
+from textual.validation import ValidationResult, Validator
+from textual.widgets import Button, Input, Label, Static, Pretty
 
-import pint
 
 from eurothermlib.utils import TemperatureQ
 
@@ -61,9 +58,9 @@ class SetpointDisplay(Static):
         pass
 
     def watch_units(self, units: str):
-        self.query_one('#setpoint-label', VariableLabel).value = (
-            f'{self.setpoint.to(units):~P}'
-        )
+        self.query_one(
+            '#setpoint-label', VariableLabel
+        ).value = f'{self.setpoint.to(units):~P}'
 
     def watch_remoteSetpointEnabled(self, enabled: bool):
         if enabled:
@@ -92,9 +89,9 @@ class SetpointDisplay(Static):
             self.query_one('#button-setpoint', Button).disabled = False
 
     def watch_setpoint(self, value: TemperatureQ):
-        self.query_one('#setpoint-label', VariableLabel).value = (
-            f'{value.to(self.units):~P}'
-        )
+        self.query_one(
+            '#setpoint-label', VariableLabel
+        ).value = f'{value.to(self.units):~P}'
 
 
 class TemperatureValidator(Validator):

@@ -4,16 +4,14 @@ import numpy as np
 from reactivex.scheduler import ThreadPoolScheduler
 from rich.text import Text
 from textual.app import ComposeResult
-from textual.containers import Horizontal, Vertical
+from textual.containers import Horizontal
 from textual.reactive import reactive
 from textual.widget import Widget
 from textual.widgets import (
     Button,
-    Collapsible,
     DataTable,
     Digits,
     Label,
-    Sparkline,
     Static,
     TabbedContent,
 )
