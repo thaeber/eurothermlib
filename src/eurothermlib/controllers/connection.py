@@ -10,7 +10,7 @@ class ModbusSerialConnection:
     __connections__ = {}
 
     def __init__(self, cfg: SerialPortConfig):
-        self.client = ModbusSerialClient(cfg.port, baudrate=cfg.baudRate, strict=False)
+        self.client = ModbusSerialClient(cfg.port, baudrate=cfg.baudRate)
         self.executor = futures.ThreadPoolExecutor(max_workers=1)
 
     def __new__(cls, cfg: SerialPortConfig):
