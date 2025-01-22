@@ -1,7 +1,19 @@
 <!-- insertion marker -->
-<a name="0.1.1"></a>
+<a name="v0.1.2"></a>
 
-## [0.1.1](https://github.com/thaeber/eurothermlib/compare/2a527035bf11a206a900e002170c4cbe36b50da1...0.0.1) (2025-01-17)
+## [v0.1.2](https://github.com/thaeber/eurothermlib/compare/v0.1.1...v0.1.2) (2025-01-22)
+
+### Bug Fixes
+
+- `strict` keyword argument in ModbusSerialClient removed ([2753eac](https://github.com/thaeber/eurothermlib/commit/2753eac43d8b2b59cb231585a99ec1aff7e61f49))
+
+### Chore
+
+- pre-commit run --all ([d6dc7cc](https://github.com/thaeber/eurothermlib/commit/d6dc7cc5160c4d44ffd23b8a9bc24fd2713bc8e9))
+
+<a name="v0.1.1"></a>
+
+## [v0.1.1](https://github.com/thaeber/eurothermlib/compare/2a527035bf11a206a900e002170c4cbe36b50da1...v0.1.1) (2025-01-17)
 
 ### Bug Fixes
 
@@ -37,6 +49,7 @@
 
 ### Chore
 
+- updated changelog.md ([2223422](https://github.com/thaeber/eurothermlib/commit/22234227d9c1d0668d9ddfc55db3a7ad1632fac6))
 - pre-commit run --all-files ([bfb9e84](https://github.com/thaeber/eurothermlib/commit/bfb9e847b78fb9dd32755d1c724413926d86e1dc))
 - run pre-commit ([e4f89ed](https://github.com/thaeber/eurothermlib/commit/e4f89ed4ae8c4db9adb587f42ff330095ab68792))
 - pre-commit (excluding proto generated files) ([5dad126](https://github.com/thaeber/eurothermlib/commit/5dad126abd6cea0efa8b74826338be86312ef244))
