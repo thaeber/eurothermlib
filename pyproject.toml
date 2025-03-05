@@ -24,6 +24,7 @@ pymodbus = { extras = ["serial"], version = "^3.6.9" }
 tenacity = "^8.4.2"
 textual = "^0.71.0"
 textual-plotext = "^0.2.1"
+nidaqmx = "^1.0.2"
 
 
 [tool.poetry.group.dev.dependencies]
