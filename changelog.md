@@ -1,4 +1,11 @@
 <!-- insertion marker -->
+<a name="v0.1.3"></a>
+
+## [v0.1.3](https://github.com/thaeber/eurothermlib/compare/v0.1.2...v0.1.3) (2025-03-05)
+
+### Features
+
+- Sending digital trigger signals in time or temperature intervals ([9168efd](https://github.com/thaeber/eurothermlib/commit/9168efdda6e7f6c054d729f6b3fd5086a8667ce9))
 
 <a name="v0.1.2"></a>
 
@@ -10,6 +17,7 @@
 
 ### Chore
 
+- git-changelog -B patch ([25ab06a](https://github.com/thaeber/eurothermlib/commit/25ab06a05a294412252a10a1283b37dd8bc5d13b))
 - pre-commit run --all ([d6dc7cc](https://github.com/thaeber/eurothermlib/commit/d6dc7cc5160c4d44ffd23b8a9bc24fd2713bc8e9))
 
 <a name="v0.1.1"></a>
@@ -61,3 +69,4 @@
 ### Build
 
 - **deps:** upgrading to python 3.11 ([1d97532](https://github.com/thaeber/eurothermlib/commit/1d97532f34a697726704dee69d1e9a33df5be30e))
+
