@@ -1,11 +1,11 @@
 # exclude: "^pint/_vendor"
 exclude: |
-      (?x)^(
-          .*/service_pb2_grpc.py|
-          .*/service_pb2_grpc.pyi|
-          .*/service_pb2.py|
-          .*/service_pb2.pyi|
-      )$
+  (?x)^(
+      .*/service_pb2_grpc.py|
+      .*/service_pb2_grpc.pyi|
+      .*/service_pb2.py|
+      .*/service_pb2.pyi|
+  )$
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.4.0
