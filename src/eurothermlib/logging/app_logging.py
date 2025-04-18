@@ -45,7 +45,7 @@ def configure_app_logging(mode: AppLoggingMode):
                 formatter: simple
                 filename: ".log/eurotherm.server.log"
                 encoding: utf-8
-                when: "d"
+                when: "midnight"
                 interval: 1
         root:
             level: INFO
