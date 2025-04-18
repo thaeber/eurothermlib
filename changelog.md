@@ -1,4 +1,17 @@
 <!-- insertion marker -->
+
+<a name="v0.1.4"></a>
+
+## [v0.1.4](https://github.com/thaeber/eurothermlib/compare/v0.1.3...v0.1.4) (2025-04-18)
+
+### Bug Fixes
+
+- Roll over server log at midnight ([4282d37](https://github.com/thaeber/eurothermlib/commit/4282d37b14b2d22f89cff0df18600b06c2d6a7b5))
+
+### Chore
+
+- pre-commit (excluding proto generated files) ([785e5df](https://github.com/thaeber/eurothermlib/commit/785e5dffc5500fb7c384b7108d64f11bb0a1a3bc))
+
 <a name="v0.1.3"></a>
 
 ## [v0.1.3](https://github.com/thaeber/eurothermlib/compare/v0.1.2...v0.1.3) (2025-03-05)
@@ -69,4 +82,3 @@
 ### Build
 
 - **deps:** upgrading to python 3.11 ([1d97532](https://github.com/thaeber/eurothermlib/commit/1d97532f34a697726704dee69d1e9a33df5be30e))
-
