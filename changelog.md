@@ -1,5 +1,13 @@
 <!-- insertion marker -->
 
+<a name="v0.1.5"></a>
+
+## [v0.1.5](https://github.com/thaeber/eurothermlib/compare/v0.1.4...v0.1.5) (2025-05-13)
+
+### Features
+
+- Set digital trigger to high/low using `nidaqmx` port ([a80e13a](https://github.com/thaeber/eurothermlib/commit/a80e13a42e8e81c3b21bd55b610a474926ce7c92))
+
 <a name="v0.1.4"></a>
 
 ## [v0.1.4](https://github.com/thaeber/eurothermlib/compare/v0.1.3...v0.1.4) (2025-04-18)
