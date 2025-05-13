@@ -1,26 +1,20 @@
 import logging
 import time
 from typing import cast
-from datetime import datetime, timedelta
+from datetime import datetime
 
 import click
 import grpc
 import nidaqmx
-from rich.pretty import pretty_repr
 from rich.progress import Progress
 import pint
 
 from eurothermlib.configuration import Config
-from eurothermlib.controllers.controller import InstrumentStatus
-from eurothermlib.utils import TemperatureQ, TemperatureRateQ, TimeQ
 
 from ..server import servicer
 from .cli import (
     cli,
     device_option,
-    validate_temperature,
-    validate_temperature_rate,
-    validate_time,
 )
 
 logger = logging.getLogger(__name__)
@@ -53,8 +47,8 @@ def every(ctx: click.Context, device: str, interval: str, channel: str):
     Examples:
 
     \b
-    eurotherm trigger every 10min
-    eurotherm trigger every 10K
+    eurotherm trigger every 10min Dev1/port2/line0
+    eurotherm trigger every 10K Dev1/port2/line0
     """
     ureg = pint.application_registry.get()
     intervalQ = ureg.Quantity(interval)
@@ -103,27 +97,37 @@ def every(ctx: click.Context, device: str, interval: str, channel: str):
         logger.error('Interval must have dimensions of [time] or [temperature]')
 
 
-# @trigger.command()
-# @click.pass_context
-# @device_option
-# def enable(ctx: click.Context, device: str):
-#     """Enable remote setpoint"""
-#     cfg: Config = ctx.obj['config']
-#     try:
-#         client = servicer.connect(cfg.server)
-#         client.is_alive()
+@trigger.command()
+@click.pass_context
+@device_option
+@click.argument('channel')
+def on(ctx: click.Context, device: str, channel: str):
+    """Set a digital signal to `on` (high level) using `nidaqmx`
 
-#         client.toggle_remote_setpoint(device, servicer.RemoteSetpointState.ENABLE)
+    Examples:
 
-#         logger.info(f'[{repr(device)}] Checking remote setpoint status')
-#         status = client.current_process_values(device).status
-#         if InstrumentStatus.LocalRemoteSPSelect not in status:
-#             logger.warning(f'[{repr(device)}] Could not enable remote setpoint')
-#             logger.warning(f'[{repr(device)}] Instrument status: {pretty_repr(status)}')
-#         else:
-#             logger.info(f'[{repr(device)}] Remote setpoint successfully enabled')
-#             logger.info(f'[{repr(device)}] Instrument status: {pretty_repr(status)}')
+    \b
+    eurotherm trigger on Dev1/port2/line0
+    """
+    logger.info(f'Setting digital line to `on` (high level) on channel {channel})')
+    with nidaqmx.Task() as task:
+        task.do_channels.add_do_chan(channel)
+        task.write([True])
 
-#     except grpc.RpcError as ex:
-#         logger.error('Remote RPC call failed.')
-#         logger.error(ex)
+
+@trigger.command()
+@click.pass_context
+@device_option
+@click.argument('channel')
+def off(ctx: click.Context, device: str, channel: str):
+    """Set a digital signal to `off` (low level) using `nidaqmx`
+
+    Examples:
+
+    \b
+    eurotherm trigger on Dev1/port2/line0
+    """
+    logger.info(f'Setting digital line to `off` (low level) on channel {channel})')
+    with nidaqmx.Task() as task:
+        task.do_channels.add_do_chan(channel)
+        task.write([False])

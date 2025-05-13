@@ -74,13 +74,13 @@ class LoggingConfig(BaseModel):
     def check_formatting(self):
         try:
             self.directory.format(datetime.now())
-        except:
+        except:  # noqa: E722
             raise ValueError(
                 f'Cannot format directory name with current date/time: {self.directory}'
             )
         try:
             self.filename.format(datetime.now())
-        except:
+        except:  # noqa: E722
             raise ValueError(
                 f'Cannot format directory name with current date/time: {self.filename}'
             )
