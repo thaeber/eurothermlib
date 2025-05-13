@@ -1,5 +1,13 @@
 <!-- insertion marker -->
 
+<a name="v0.1.6"></a>
+
+## [v0.1.6](https://github.com/thaeber/eurothermlib/compare/v0.1.5...v0.1.6) (2025-05-13)
+
+### Features
+
+- Configure trigger alias in configuration file ([af98d51](https://github.com/thaeber/eurothermlib/commit/af98d51150c7e4d187c98766e556e3a61e00e010))
+
 <a name="v0.1.5"></a>
 
 ## [v0.1.5](https://github.com/thaeber/eurothermlib/compare/v0.1.4...v0.1.5) (2025-05-13)
