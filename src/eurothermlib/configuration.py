@@ -38,6 +38,11 @@ class DeviceConfig(BaseModel):
     driver: Driver = 'simulate'
 
 
+class TriggerConfig(BaseModel):
+    name: str
+    channel: str
+
+
 class LoggingConfig(BaseModel):
     directory: str = './output/{:%Y-%m-%d}'
     filename: str = 'eurotherm-{:%Y-%m-%dT%H-%M-%S}.csv'
@@ -91,6 +96,7 @@ class Config(BaseModel):
     model_config = ConfigDict(extra='forbid')
     server: ServerConfig = ServerConfig()
     devices: List[DeviceConfig]
+    trigger: List[TriggerConfig] = []
     logging: LoggingConfig = LoggingConfig()
 
 

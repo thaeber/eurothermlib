@@ -26,6 +26,17 @@ def trigger():
     pass
 
 
+def _lookup_trigger_alias(cfg: Config, name: str):
+    """Lookup trigger alias in the configuration file."""
+    for trigger in cfg.trigger:
+        if trigger.name == name:
+            logger.info(
+                f'Found trigger {name} in configuration file with channel {trigger.channel}'
+            )
+            return trigger.channel
+    return name
+
+
 def _send_trigger(channel: str):
     logger.info('Sending trigger signal')
     with nidaqmx.Task() as task:
@@ -50,6 +61,9 @@ def every(ctx: click.Context, device: str, interval: str, channel: str):
     eurotherm trigger every 10min Dev1/port2/line0
     eurotherm trigger every 10K Dev1/port2/line0
     """
+    cfg: Config = ctx.obj['config']
+    channel = _lookup_trigger_alias(cfg, channel)
+
     ureg = pint.application_registry.get()
     intervalQ = ureg.Quantity(interval)
     intervalQ = cast(pint.Quantity, intervalQ)
@@ -70,7 +84,6 @@ def every(ctx: click.Context, device: str, interval: str, channel: str):
                     # update t0
                     t0 = now
     elif intervalQ.check('[temperature]'):
-        cfg: Config = ctx.obj['config']
         try:
             client = servicer.connect(cfg.server)
             client.is_alive()
@@ -109,6 +122,8 @@ def on(ctx: click.Context, device: str, channel: str):
     \b
     eurotherm trigger on Dev1/port2/line0
     """
+    cfg: Config = ctx.obj['config']
+    channel = _lookup_trigger_alias(cfg, channel)
     logger.info(f'Setting digital line to `on` (high level) on channel {channel})')
     with nidaqmx.Task() as task:
         task.do_channels.add_do_chan(channel)
@@ -127,6 +142,8 @@ def off(ctx: click.Context, device: str, channel: str):
     \b
     eurotherm trigger on Dev1/port2/line0
     """
+    cfg: Config = ctx.obj['config']
+    channel = _lookup_trigger_alias(cfg, channel)
     logger.info(f'Setting digital line to `off` (low level) on channel {channel})')
     with nidaqmx.Task() as task:
         task.do_channels.add_do_chan(channel)
