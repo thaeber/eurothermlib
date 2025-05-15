@@ -1,4 +1,11 @@
 <!-- insertion marker -->
+<a name="v0.1.7"></a>
+
+## [v0.1.7](https://github.com/thaeber/eurothermlib/compare/v0.1.6...v0.1.7) (2025-05-15)
+
+### Features
+
+- Wait for time duration or until temperature is reached ([ee57baf](https://github.com/thaeber/eurothermlib/commit/ee57baf4be97f85f66ffda3a73d0007026a89d11))
 
 <a name="v0.1.6"></a>
 
@@ -98,3 +105,4 @@
 ### Build
 
 - **deps:** upgrading to python 3.11 ([1d97532](https://github.com/thaeber/eurothermlib/commit/1d97532f34a697726704dee69d1e9a33df5be30e))
+
