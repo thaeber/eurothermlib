@@ -32,9 +32,7 @@ def validate_time(ctx: click.Context, param, value):
         return TimeQ._validate(value)
     except ValueError as ex:
         logger.error(str(ex))
-        raise click.BadParameter(
-            f"units of {value} are incompatible with [temperature]."
-        )
+        raise click.BadParameter(f"units of {value} are incompatible with [time].")
 
 
 def validate_temperature(ctx: click.Context, param, value):
