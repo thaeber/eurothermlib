@@ -40,7 +40,8 @@ def _lookup_trigger_alias(cfg: Config, name: str):
     for trigger in cfg.trigger:
         if trigger.name == name:
             logger.info(
-                f'Found trigger {name} in configuration file with channel {trigger.channel}'
+                f'Found trigger {name} in configuration file with channel '
+                f'{trigger.channel}'
             )
             return trigger.channel
     return name
@@ -183,5 +184,5 @@ def pulse(ctx: click.Context, device: str, channel: str, width: TimeQ):
     cfg: Config = ctx.obj['config']
     channel = _lookup_trigger_alias(cfg, channel)
     logger.info(f'Sending trigger pulse on channel {channel})')
-    with nidaqmx.Task() as task:
+    with nidaqmx.Task():
         _send_trigger(channel, width)

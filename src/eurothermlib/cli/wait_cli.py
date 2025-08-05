@@ -1,14 +1,11 @@
 import logging
 import time
-from typing import cast
 from datetime import datetime
 
 import click
 import grpc
-import nidaqmx
 from rich.progress import Progress
-import pint
-from eurothermlib.utils import TemperatureQ, TemperatureRateQ, TimeQ
+from eurothermlib.utils import TemperatureQ, TimeQ
 
 from eurothermlib.configuration import Config
 
