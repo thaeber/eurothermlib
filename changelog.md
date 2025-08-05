@@ -1,4 +1,21 @@
 <!-- insertion marker -->
+
+<a name="v0.1.8"></a>
+
+## [v0.1.8](https://github.com/thaeber/eurothermlib/compare/v0.1.7...v0.1.8) (2025-08-05)
+
+### Bug Fixes
+
+- Fixed type in exception message ([2b82c1b](https://github.com/thaeber/eurothermlib/commit/2b82c1b54b729f7a21db5b8a9c3e7ffca94f1dae))
+
+### Features
+
+- Sending digital trigger pulse to nidaqmx channel ([ff0e24c](https://github.com/thaeber/eurothermlib/commit/ff0e24c6b42c1dd8540de14c03939eff29bfa66c))
+
+### Code Refactoring
+
+- Pass time quantity for gate width to `_send_trigger` ([4143ab5](https://github.com/thaeber/eurothermlib/commit/4143ab5078a8f71b64c367545cb96ff7bf17490d))
+
 <a name="v0.1.7"></a>
 
 ## [v0.1.7](https://github.com/thaeber/eurothermlib/compare/v0.1.6...v0.1.7) (2025-05-15)
@@ -105,4 +122,3 @@
 ### Build
 
 - **deps:** upgrading to python 3.11 ([1d97532](https://github.com/thaeber/eurothermlib/commit/1d97532f34a697726704dee69d1e9a33df5be30e))
-
