@@ -1,32 +1,21 @@
 import logging
 import time
-from typing import cast
 from datetime import datetime
+from typing import cast
 
 import click
 import grpc
 import nidaqmx
-from rich.progress import Progress
 import pint
+from rich.progress import Progress
 
 from eurothermlib.configuration import Config
 from eurothermlib.utils import TimeQ
 
 from ..server import servicer
-from .cli import (
-    cli,
-    device_option,
-)
+from .cli import cli, device_option, validate_time
 
 logger = logging.getLogger(__name__)
-
-
-def validate_time(ctx: click.Context, param, value):
-    try:
-        return TimeQ._validate(value)
-    except ValueError as ex:
-        logger.error(str(ex))
-        raise click.BadParameter(f"units of {value} are incompatible with [time].")
 
 
 @cli.group()

@@ -10,10 +10,7 @@ from eurothermlib.utils import TemperatureQ, TimeQ
 from eurothermlib.configuration import Config
 
 from ..server import servicer
-from .cli import (
-    cli,
-    device_option,
-)
+from .cli import cli, device_option, validate_time, validate_temperature
 
 logger = logging.getLogger(__name__)
 
@@ -22,24 +19,6 @@ logger = logging.getLogger(__name__)
 def wait():
     """Wait for timespan or until a temperature is reached."""
     pass
-
-
-def validate_time(ctx: click.Context, param, value):
-    try:
-        return TimeQ._validate(value)
-    except ValueError as ex:
-        logger.error(str(ex))
-        raise click.BadParameter(f"units of {value} are incompatible with [time].")
-
-
-def validate_temperature(ctx: click.Context, param, value):
-    try:
-        return TemperatureQ._validate(value)
-    except ValueError as ex:
-        logger.error(str(ex))
-        raise click.BadParameter(
-            f"units of {value} are incompatible with [temperature]."
-        )
 
 
 @wait.command()
