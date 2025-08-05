@@ -21,6 +21,14 @@ from .cli import (
 logger = logging.getLogger(__name__)
 
 
+def validate_time(ctx: click.Context, param, value):
+    try:
+        return TimeQ._validate(value)
+    except ValueError as ex:
+        logger.error(str(ex))
+        raise click.BadParameter(f"units of {value} are incompatible with [time].")
+
+
 @cli.group()
 def trigger():
     """Generate trigger signals."""
@@ -150,3 +158,30 @@ def off(ctx: click.Context, device: str, channel: str):
     with nidaqmx.Task() as task:
         task.do_channels.add_do_chan(channel)
         task.write([False])
+
+
+@trigger.command()
+@click.pass_context
+@device_option
+@click.argument('channel')
+@click.option(
+    '--width',
+    type=str,
+    default='0.2s',
+    show_default=True,
+    callback=validate_time,
+    help='The width of the trigger pulse.',
+)
+def pulse(ctx: click.Context, device: str, channel: str, width: TimeQ):
+    """Send a digital pulse using `nidaqmx`
+
+    Examples:
+
+    \b
+    eurotherm pulse Dev1/port2/line0 --width 0.2s
+    """
+    cfg: Config = ctx.obj['config']
+    channel = _lookup_trigger_alias(cfg, channel)
+    logger.info(f'Sending trigger pulse on channel {channel})')
+    with nidaqmx.Task() as task:
+        _send_trigger(channel, width)
