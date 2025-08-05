@@ -10,6 +10,7 @@ from rich.progress import Progress
 import pint
 
 from eurothermlib.configuration import Config
+from eurothermlib.utils import TimeQ
 
 from ..server import servicer
 from .cli import (
@@ -37,12 +38,13 @@ def _lookup_trigger_alias(cfg: Config, name: str):
     return name
 
 
-def _send_trigger(channel: str):
+def _send_trigger(channel: str, width: TimeQ = TimeQ(0.2, 's')):  # type: ignore
     logger.info('Sending trigger signal')
+    gate = width.m_as('s')
     with nidaqmx.Task() as task:
         task.do_channels.add_do_chan(channel)
         task.write([True])
-        time.sleep(0.2)
+        time.sleep(gate)
         task.write([False])
 
 
