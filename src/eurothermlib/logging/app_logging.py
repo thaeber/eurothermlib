@@ -52,7 +52,7 @@ def configure_app_logging(mode: AppLoggingMode):
             handlers:
                 - console
         disable_existing_loggers: false
-    """
+    """  # noqa: E501
     cfg = OmegaConf.to_object(
         OmegaConf.create(app_logging_config).app_logging,
     )
