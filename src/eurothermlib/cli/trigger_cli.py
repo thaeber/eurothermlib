@@ -1,11 +1,14 @@
 import logging
 import time
 from datetime import datetime
+from enum import Enum
 from typing import cast
 
 import click
 import grpc
 import nidaqmx
+import nidaqmx.constants
+import nidaqmx.stream_writers
 import pint
 from rich.progress import Progress
 
@@ -36,14 +39,32 @@ def _lookup_trigger_alias(cfg: Config, name: str):
     return name
 
 
-def _send_trigger(channel: str, width: TimeQ = TimeQ(0.2, 's')):  # type: ignore
+def state2str(state: bool) -> str:
+    """Convert boolean state to string representation."""
+    return 'high' if state else 'low'
+
+
+def _send_trigger_pulse(channel: str, width: TimeQ = TimeQ(0.2, 's'), state: bool = True):  # type: ignore
     logger.info('Sending trigger signal')
     gate = width.m_as('s')
     with nidaqmx.Task() as task:
         task.do_channels.add_do_chan(channel)
-        task.write([True])
+        logger.info(
+            f'Setting digital output on {channel} to {state} [{state2str(state)}]'
+        )
+        task.write([state])
         time.sleep(gate)
-        task.write([False])
+        logger.info(f'Reset digital output on {channel}')
+        task.write([not state])
+
+
+def _set_digital_output(channel: str, state: bool):
+    with nidaqmx.Task() as task:
+        task.do_channels.add_do_chan(channel)
+        logger.info(
+            f'Setting digital output on {channel} to {state} [{state2str(state)}]'
+        )
+        task.write([state])
 
 
 @trigger.command()
@@ -80,7 +101,7 @@ def every(ctx: click.Context, device: str, interval: str, channel: str):
                 progress.update(task, completed=dt / time_interval)
                 if dt > time_interval:
                     # send trigger signal
-                    _send_trigger(channel)
+                    _send_trigger_pulse(channel)
                     # update t0
                     t0 = now
     elif intervalQ.check('[temperature]'):
@@ -99,7 +120,7 @@ def every(ctx: click.Context, device: str, interval: str, channel: str):
                     progress.update(task, completed=dT / temperature_interval)
                     if dT > temperature_interval:
                         # send trigger signal
-                        _send_trigger(channel)
+                        _send_trigger_pulse(channel)
                         # update T0
                         T0 = data.processValue
 
@@ -123,11 +144,11 @@ def on(ctx: click.Context, device: str, channel: str):
     eurotherm trigger on Dev1/port2/line0
     """
     cfg: Config = ctx.obj['config']
-    channel = _lookup_trigger_alias(cfg, channel)
-    logger.info(f'Setting digital line to `on` (high level) on channel {channel})')
-    with nidaqmx.Task() as task:
-        task.do_channels.add_do_chan(channel)
-        task.write([True])
+    _channel = _lookup_trigger_alias(cfg, channel)
+    logger.info(
+        f'Setting digital to `on` (high level) on channel {channel} [{_channel}])'
+    )
+    _set_digital_output(_channel, True)
 
 
 @trigger.command()
@@ -143,11 +164,11 @@ def off(ctx: click.Context, device: str, channel: str):
     eurotherm trigger on Dev1/port2/line0
     """
     cfg: Config = ctx.obj['config']
-    channel = _lookup_trigger_alias(cfg, channel)
-    logger.info(f'Setting digital line to `off` (low level) on channel {channel})')
-    with nidaqmx.Task() as task:
-        task.do_channels.add_do_chan(channel)
-        task.write([False])
+    _channel = _lookup_trigger_alias(cfg, channel)
+    logger.info(
+        f'Setting digital to `off` (low level) on channel {channel} [{_channel}])'
+    )
+    _set_digital_output(_channel, False)
 
 
 @trigger.command()
@@ -162,7 +183,14 @@ def off(ctx: click.Context, device: str, channel: str):
     callback=validate_time,
     help='The width of the trigger pulse.',
 )
-def pulse(ctx: click.Context, device: str, channel: str, width: TimeQ):
+@click.option(
+    '--level',
+    type=click.Choice(['high', 'low']),
+    default='high',
+    show_default=True,
+    help='The (digital) level of the trigger pulse.',
+)
+def pulse(ctx: click.Context, device: str, channel: str, width: TimeQ, level: str):
     """Send a digital pulse using `nidaqmx`
 
     Examples:
@@ -171,7 +199,89 @@ def pulse(ctx: click.Context, device: str, channel: str, width: TimeQ):
     eurotherm pulse Dev1/port2/line0 --width 0.2s
     """
     cfg: Config = ctx.obj['config']
-    channel = _lookup_trigger_alias(cfg, channel)
-    logger.info(f'Sending trigger pulse on channel {channel})')
+    _channel = _lookup_trigger_alias(cfg, channel)
+    if level == 'high':
+        _level = True
+    else:
+        _level = False
+    logger.info(f'Sending trigger pulse on channel {channel} [{_channel}]')
     with nidaqmx.Task():
-        _send_trigger(channel, width)
+        _send_trigger_pulse(_channel, width, _level)
+
+
+@trigger.command()
+@click.pass_context
+@device_option
+@click.argument('channel')
+@click.argument('frequency', type=float)
+@click.option(
+    '--width',
+    type=str,
+    default='0.2s',
+    show_default=True,
+    callback=validate_time,
+    help='The width of the trigger pulse.',
+)
+def burst(ctx: click.Context, device: str, channel: str, width: TimeQ):
+    """Send a burst of digital pulses using `nidaqmx`
+
+    Examples:
+
+    \b
+    eurotherm burst dev1/port2/line0 --frequency 1/min --width 0.2s
+    """
+    cfg: Config = ctx.obj['config']
+    _channel = _lookup_trigger_alias(cfg, channel)
+    logger.info(f'Sending trigger pulse on channel {channel} [{_channel}]')
+
+    # with nidaqmx.Task():
+    #     _send_trigger(_channel, width)
+
+    sample_rate = 2000  # samples per channel per second
+    samples_per_frame = 1000  # Define an appropriate value for samples per frame
+    frames_per_buffer = 10  # Define an appropriate value for frames per buffer
+    NR_OF_CHANNELS = 1  # Define the number of channels (DO NOT CHANGE THIS)
+
+    with nidaqmx.Task() as task:
+        task.do_channels.add_do_chan(
+            _channel, line_grouping=nidaqmx.constants.LineGrouping.CHAN_PER_LINE
+        )
+        task.timing.cfg_samp_clk_timing(
+            rate=sample_rate, sample_mode=nidaqmx.constants.AcquisitionType.CONTINUOUS
+        )
+        task.out_stream.output_buf_size = (
+            samples_per_frame * frames_per_buffer * NR_OF_CHANNELS
+        )
+        writer = nidaqmx.stream_writers.DigitalSingleChannelWriter(task.out_stream)
+
+        def writing_task_callback(
+            task_handle: int,
+            event_type: nidaqmx.constants.EveryNSamplesEventType,
+            num_samples: int,
+            callback_data: object,
+        ):
+            """Called every time a defined amount of samples have been transferred from the device output
+            buffer. Registered by calling `task.register_every_n_samples_transferred_from_buffer_event`
+            (see `nidaqmx` documentation: https://nidaqmx-python.readthedocs.io/en/stable/task.html#nidaqmx.task.Task.register_every_n_samples_transferred_from_buffer_event).
+
+            Args:
+                task_handle (int): Task handle index
+                event_type (nidaqmx.constants.EveryNSamplesEventType): TRANSFERRED_FROM_BUFFER
+                num_samples (int): Number of samples written into the write buffer
+                callback_data (object): User data
+            """
+            writer.write_many_sample(next(callback_data), timeout=10.0)
+
+            # callback function must return 0 to prevent raising TypeError exception.
+            return 0
+
+        output_frame_generator = None
+        for _ in range(frames_per_buffer):
+            writer.write_many_sample_port_byte(
+                next(output_frame_generator), timeout=1.0
+            )
+
+        task.register_every_n_samples_transferred_from_buffer_event(
+            samples_per_frame,
+            lambda *args: writing_task_callback(*args[:-1], output_frame_generator),
+        )
