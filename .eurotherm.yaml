@@ -10,6 +10,10 @@ devices:
       port: COM7
       buadRate: 19200
 
+trigger:
+  - name: laser
+    channel: /dev2/pfi1
+
 logging:
   directory: .output/{:%Y-%m-%d}
   filename: eurotherm-{:%Y-%m-%dT%H-%M-%S}.txt

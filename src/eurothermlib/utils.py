@@ -1,4 +1,5 @@
 # %%
+from multiprocessing import Value
 import re
 import tokenize
 from typing import Any, ClassVar, Type, TypeAlias
@@ -117,5 +118,6 @@ TemperatureRateQ: TypeAlias = TypedQuantity['[temperature]/[time]']
 DimensionlessQ: TypeAlias = TypedQuantity['[]']
 FrequencyQ: TypeAlias = TypedQuantity['1/[time]']
 TimeQ: TypeAlias = TypedQuantity['[time]']
+FractionQ: TypeAlias = TypedQuantity['[]']
 
 # %%

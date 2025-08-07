@@ -1,11 +1,12 @@
 import functools
 import logging
-import logging.handlers
 import os
 import sys
 from time import sleep
+from typing import Type
 
 import click
+import cloup
 import grpc
 import pandas
 import reactivex
@@ -13,7 +14,7 @@ from rich.pretty import pretty_repr
 from rich.traceback import install
 
 from eurothermlib.server import servicer
-from eurothermlib.utils import TemperatureQ, TemperatureRateQ, TimeQ
+from eurothermlib.utils import TemperatureQ, TemperatureRateQ, TimeQ, TypedQuantity
 
 from ..configuration import Config, get_configuration
 from ..logging import AppLoggingMode, configure_app_logging
@@ -112,7 +113,22 @@ def validate_temperature_rate(ctx: click.Context, param, value):
         )
 
 
-@click.group
+def validate_quantity(qtype: Type[TypedQuantity]):
+    def wrapper(ctx: click.Context, param, value):
+        if value is None:
+            return None
+        try:
+            return qtype._validate(value)
+        except ValueError as ex:
+            logger.error(str(ex))
+            raise click.BadParameter(
+                f'Units of "{value}" are incompatible with expected units of "{qtype.__dimensionality__}".'
+            )
+
+    return wrapper
+
+
+@cloup.group()
 @click.pass_context
 @click.option(
     '-c',
