@@ -122,7 +122,8 @@ def validate_quantity(qtype: Type[TypedQuantity]):
         except ValueError as ex:
             logger.error(str(ex))
             raise click.BadParameter(
-                f'Units of "{value}" are incompatible with expected units of "{qtype.__dimensionality__}".'
+                f'Units of "{value}" are incompatible with expected units of '
+                f'"{qtype.__dimensionality__}".'
             )
 
     return wrapper
