@@ -117,5 +117,6 @@ TemperatureRateQ: TypeAlias = TypedQuantity['[temperature]/[time]']
 DimensionlessQ: TypeAlias = TypedQuantity['[]']
 FrequencyQ: TypeAlias = TypedQuantity['1/[time]']
 TimeQ: TypeAlias = TypedQuantity['[time]']
+FractionQ: TypeAlias = TypedQuantity['[]']
 
 # %%

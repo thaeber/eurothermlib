@@ -1,19 +1,28 @@
 import logging
 import time
 from datetime import datetime
-from typing import cast
+from typing import Literal, cast
 
 import click
+import cloup
 import grpc
 import nidaqmx
+import nidaqmx.constants
 import pint
 from rich.progress import Progress
+from cloup.constraints import (
+    If,
+    IsSet,
+    require_all,
+    accept_none,
+    mutually_exclusive,
+)
 
 from eurothermlib.configuration import Config
-from eurothermlib.utils import TimeQ
+from eurothermlib.utils import FractionQ, FrequencyQ, TimeQ
 
 from ..server import servicer
-from .cli import cli, device_option, validate_time
+from .cli import cli, device_option, validate_quantity
 
 logger = logging.getLogger(__name__)
 
@@ -24,7 +33,7 @@ def trigger():
     pass
 
 
-def _lookup_trigger_alias(cfg: Config, name: str):
+def _lookup_channel_alias(cfg: Config, name: str):
     """Lookup trigger alias in the configuration file."""
     for trigger in cfg.trigger:
         if trigger.name == name:
@@ -36,14 +45,40 @@ def _lookup_trigger_alias(cfg: Config, name: str):
     return name
 
 
-def _send_trigger(channel: str, width: TimeQ = TimeQ(0.2, 's')):  # type: ignore
+def state2str(state: bool) -> str:
+    """Convert boolean state to string representation."""
+    return 'high' if state else 'low'
+
+
+def _send_trigger_pulse(
+    channel: str,
+    width: TimeQ = TimeQ(0.2, 's'),
+    state: bool | Literal['high', 'low'] = True,
+):
     logger.info('Sending trigger signal')
     gate = width.m_as('s')
+    if state == 'high':
+        state = True
+    elif state == 'low':
+        state = False
     with nidaqmx.Task() as task:
         task.do_channels.add_do_chan(channel)
-        task.write([True])
+        logger.info(
+            f'Setting digital output on {channel} to {state} [{state2str(state)}]'
+        )
+        task.write([state])
         time.sleep(gate)
-        task.write([False])
+        logger.info(f'Reset digital output on {channel}')
+        task.write([not state])
+
+
+def _set_digital_output(channel: str, state: bool):
+    with nidaqmx.Task() as task:
+        task.do_channels.add_do_chan(channel)
+        logger.info(
+            f'Setting digital output on {channel} to {state} [{state2str(state)}]'
+        )
+        task.write([state])
 
 
 @trigger.command()
@@ -51,7 +86,29 @@ def _send_trigger(channel: str, width: TimeQ = TimeQ(0.2, 's')):  # type: ignore
 @device_option
 @click.argument('interval')
 @click.argument('channel')
-def every(ctx: click.Context, device: str, interval: str, channel: str):
+@click.option(
+    '--width',
+    type=str,
+    default='0.2s',
+    show_default=True,
+    callback=validate_quantity(TimeQ),
+    help='The width of the trigger pulse.',
+)
+@click.option(
+    '--level',
+    type=click.Choice(['high', 'low']),
+    default='high',
+    show_default=True,
+    help='The (digital) level of the trigger pulse.',
+)
+def every(
+    ctx: click.Context,
+    device: str,
+    interval: str,
+    channel: str,
+    width: TimeQ,
+    level: str,
+):
     """Send a digital trigger signal using `nidaqmx` at given time or
     temperature intervals.
 
@@ -62,7 +119,7 @@ def every(ctx: click.Context, device: str, interval: str, channel: str):
     eurotherm trigger every 10K Dev1/port2/line0
     """
     cfg: Config = ctx.obj['config']
-    channel = _lookup_trigger_alias(cfg, channel)
+    channel = _lookup_channel_alias(cfg, channel)
 
     ureg = pint.application_registry.get()
     intervalQ = ureg.Quantity(interval)
@@ -80,7 +137,7 @@ def every(ctx: click.Context, device: str, interval: str, channel: str):
                 progress.update(task, completed=dt / time_interval)
                 if dt > time_interval:
                     # send trigger signal
-                    _send_trigger(channel)
+                    _send_trigger_pulse(channel, width, level)
                     # update t0
                     t0 = now
     elif intervalQ.check('[temperature]'):
@@ -99,7 +156,7 @@ def every(ctx: click.Context, device: str, interval: str, channel: str):
                     progress.update(task, completed=dT / temperature_interval)
                     if dT > temperature_interval:
                         # send trigger signal
-                        _send_trigger(channel)
+                        _send_trigger_pulse(channel, width, level)
                         # update T0
                         T0 = data.processValue
 
@@ -123,11 +180,11 @@ def on(ctx: click.Context, device: str, channel: str):
     eurotherm trigger on Dev1/port2/line0
     """
     cfg: Config = ctx.obj['config']
-    channel = _lookup_trigger_alias(cfg, channel)
-    logger.info(f'Setting digital line to `on` (high level) on channel {channel})')
-    with nidaqmx.Task() as task:
-        task.do_channels.add_do_chan(channel)
-        task.write([True])
+    _channel = _lookup_channel_alias(cfg, channel)
+    logger.info(
+        f'Setting digital to `on` (high level) on channel {channel} [{_channel}])'
+    )
+    _set_digital_output(_channel, True)
 
 
 @trigger.command()
@@ -143,11 +200,11 @@ def off(ctx: click.Context, device: str, channel: str):
     eurotherm trigger on Dev1/port2/line0
     """
     cfg: Config = ctx.obj['config']
-    channel = _lookup_trigger_alias(cfg, channel)
-    logger.info(f'Setting digital line to `off` (low level) on channel {channel})')
-    with nidaqmx.Task() as task:
-        task.do_channels.add_do_chan(channel)
-        task.write([False])
+    _channel = _lookup_channel_alias(cfg, channel)
+    logger.info(
+        f'Setting digital to `off` (low level) on channel {channel} [{_channel}])'
+    )
+    _set_digital_output(_channel, False)
 
 
 @trigger.command()
@@ -159,10 +216,17 @@ def off(ctx: click.Context, device: str, channel: str):
     type=str,
     default='0.2s',
     show_default=True,
-    callback=validate_time,
+    callback=validate_quantity(TimeQ),
     help='The width of the trigger pulse.',
 )
-def pulse(ctx: click.Context, device: str, channel: str, width: TimeQ):
+@click.option(
+    '--level',
+    type=click.Choice(['high', 'low']),
+    default='high',
+    show_default=True,
+    help='The (digital) level of the trigger pulse.',
+)
+def pulse(ctx: click.Context, device: str, channel: str, width: TimeQ, level: str):
     """Send a digital pulse using `nidaqmx`
 
     Examples:
@@ -171,7 +235,232 @@ def pulse(ctx: click.Context, device: str, channel: str, width: TimeQ):
     eurotherm pulse Dev1/port2/line0 --width 0.2s
     """
     cfg: Config = ctx.obj['config']
-    channel = _lookup_trigger_alias(cfg, channel)
-    logger.info(f'Sending trigger pulse on channel {channel})')
+    _channel = _lookup_channel_alias(cfg, channel)
+    logger.info(f'Sending trigger pulse on channel {channel} [{_channel}]')
     with nidaqmx.Task():
-        _send_trigger(channel, width)
+        _send_trigger_pulse(_channel, width, level)
+
+
+@trigger.command()
+@click.pass_context
+@device_option
+@click.argument('channel')
+@cloup.option_group(
+    'Frequency and Duty Cycle',
+    cloup.option(
+        '--frequency',
+        type=str,
+        default=None,
+        show_default=True,
+        callback=validate_quantity(FrequencyQ),
+        help='The frequency of the pulse train.',
+    ),
+    cloup.option(
+        '--duty-cycle',
+        type=str,
+        default='50%',
+        show_default=True,
+        callback=validate_quantity(FractionQ),
+        help='The duty cycle of the pulse train.',
+    ),
+)
+@cloup.option_group(
+    'On/off time',
+    cloup.option(
+        '--on-time',
+        type=str,
+        default=None,
+        show_default=True,
+        callback=validate_quantity(TimeQ),
+        help='The on time of the pulse train.',
+    ),
+    cloup.option(
+        '--off-time',
+        type=str,
+        default=None,
+        show_default=True,
+        callback=validate_quantity(TimeQ),
+        help='The off time of the pulse train.',
+    ),
+)
+@cloup.constraint(If(~IsSet('frequency'), then=require_all), ['on_time', 'off_time'])
+@cloup.constraint(If(IsSet('frequency'), then=accept_none), ['on_time', 'off_time'])
+@cloup.option_group(
+    'Duration',
+    cloup.option(
+        '--num-pulses',
+        type=click.IntRange(min=1),
+        default=None,
+        show_default=True,
+        help=(
+            'The number of pulses to generate. If not set, the pulse train will '
+            'run indefinitely.'
+        ),
+    ),
+    cloup.option(
+        '--timespan',
+        type=str,
+        default=None,
+        show_default=True,
+        callback=validate_quantity(TimeQ),
+        help=(
+            'The duration of the pulse train in seconds. If not set, the pulse '
+            'train will run indefinitely.'
+        ),
+    ),
+    constraint=mutually_exclusive,
+)
+@click.option(
+    '--idle-state',
+    type=click.Choice(['high', 'low']),
+    default='low',
+    show_default=True,
+    help='Specifies the resting state of the output terminal.',
+)
+@click.option(
+    '--initial-delay',
+    type=str,
+    default='0s',
+    show_default=True,
+    callback=validate_quantity(TimeQ),
+    help=(
+        'The amount of time in seconds to wait before generating the first ' 'pulse.'
+    ),
+)
+def pulsetrain(
+    ctx: click.Context,
+    device: str,
+    channel: str,
+    frequency: FrequencyQ | None,
+    duty_cycle: FractionQ,
+    on_time: TimeQ | None,
+    off_time: TimeQ | None,
+    num_pulses: int | None,
+    timespan: TimeQ | None,
+    idle_state: Literal['high', 'low'],
+    initial_delay: TimeQ,
+):
+    """
+    Generate a continuous digital pulse train on the specified channel using NI-DAQmx.
+
+    You can specify the pulse train by either:
+        - Frequency and duty cycle (e.g. --frequency 1Hz --duty-cycle 50%)
+        - On and off times (e.g. --on-time 0.5s --off-time 0.5s)
+
+    The channel should be a programmable function input (PFI) line, such as
+    `/dev1/pfi0`. Internally, counter `ctr0` is used to generate the pulses, and
+    counter `ctr1` counts the number of pulses produced.
+
+    Examples:
+
+        eurotherm pulsetrain dev1/port2/line0 --frequency 1Hz
+        eurotherm pulsetrain dev1/port2/line0 --on-time 0.5s --off-time 0.5s
+    """
+    cfg: Config = ctx.obj['config']
+
+    # lookup the channel alias in the configuration
+    if not channel.startswith('/'):
+        channel = '/' + channel
+    _channel = _lookup_channel_alias(cfg, channel)
+    ni_device = _channel.split('/')[1]
+
+    # check if the device is a valid NI-DAQmx device
+    # check duty cycle
+    if not (0 < duty_cycle.m_as('') < 1):
+        raise click.BadParameter(
+            f'Duty cycle must be in the range (0%, 100%), got {duty_cycle.m_as("")}'
+        )
+
+    # check idle state
+    if idle_state == 'low':
+        _idle_state = nidaqmx.constants.Level.LOW
+    elif idle_state == 'high':
+        _idle_state = nidaqmx.constants.Level.HIGH
+    else:
+        raise click.BadParameter(
+            f'Idle state must be either "high" or "low", got {idle_state}'
+        )
+
+    # generate the pulse train
+    logger.info(f'Sending trigger burst on channel {channel} [{_channel}]')
+    with nidaqmx.Task() as task, nidaqmx.Task() as task_input:
+        if frequency is not None:
+            logger.info(
+                f'Generating pulse train with frequency {frequency:~P} and '
+                f'duty cycle {duty_cycle:~P}'
+            )
+            co_channel = task.co_channels.add_co_pulse_chan_freq(
+                f'{ni_device}/ctr0',
+                freq=frequency.m_as('Hz'),
+                idle_state=_idle_state,
+                initial_delay=initial_delay.m_as('s'),
+                duty_cycle=duty_cycle.m_as(''),
+            )
+            pulse_width = duty_cycle / frequency
+        elif on_time is not None and off_time is not None:
+            logger.info(
+                f'Generating pulse train with on time {on_time:~P} and off time '
+                f'{off_time:~P}'
+            )
+            co_channel = task.co_channels.add_co_pulse_chan_time(
+                f'{ni_device}/ctr0',
+                idle_state=_idle_state,
+                initial_delay=initial_delay.m_as('s'),
+                low_time=off_time.m_as('s'),
+                high_time=on_time.m_as('s'),
+            )
+            pulse_width = on_time
+        co_channel.co_pulse_term = _channel
+        task.timing.cfg_implicit_timing(
+            sample_mode=nidaqmx.constants.AcquisitionType.CONTINUOUS
+        )
+
+        ci_channel = task_input.ci_channels.add_ci_count_edges_chan(
+            f'{ni_device}/ctr1',
+            initial_count=0,
+            count_direction=nidaqmx.constants.CountDirection.COUNT_UP,
+            edge=(
+                nidaqmx.constants.Edge.RISING
+                if idle_state == 'low'
+                else nidaqmx.constants.Edge.FALLING
+            ),
+        )
+        ci_channel.ci_count_edges_term = _channel
+
+        task_input.start()
+        task.start()
+        t0 = datetime.now()
+        try:
+            edge_counts = 0
+            _previous_edge_counts = 0
+            while True:
+                edge_counts = task_input.read()
+                elapsed_time = (datetime.now() - t0).total_seconds()
+                if (timespan is not None) and (elapsed_time > timespan.m_as('s')):
+                    logger.info(
+                        f'Timespan of {timespan:~P} reached with at total of '
+                        f'{edge_counts} pulses.'
+                    )
+                    break
+                elif edge_counts != _previous_edge_counts:
+                    logger.info(
+                        f'Generated {edge_counts:n} pulses in {elapsed_time:.2f} '
+                        f'seconds'
+                    )
+                    if num_pulses is not None and edge_counts >= num_pulses:
+                        logger.info(
+                            f'Reached the specified number of pulses: '
+                            f'{num_pulses:n}'
+                        )
+                        # make sure to wait for the last pulse to finish
+                        time.sleep(pulse_width.m_as('s'))
+                        break
+                    _previous_edge_counts = edge_counts
+
+        except KeyboardInterrupt:
+            pass
+        finally:
+            print(f"\nAcquired {edge_counts:n} total counts.")
+
+            task_input.stop()
+            task.stop()

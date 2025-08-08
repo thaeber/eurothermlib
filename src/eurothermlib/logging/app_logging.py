@@ -29,7 +29,7 @@ def configure_app_logging(mode: AppLoggingMode):
                 datefmt: "%Y-%m-%d %H:%M:%S"
             rich:
                 format: "[%(thread)s] %(message)s"
-                datefmt: "%Y-%m-%d %H:%M:%S"
+                datefmt: "%Y-%m-%d %H:%M:%S.%f"
         handlers:
             console:
                 class: rich.logging.RichHandler
