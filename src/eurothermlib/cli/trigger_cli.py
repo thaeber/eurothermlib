@@ -351,15 +351,12 @@ def pulsetrain(
     cfg: Config = ctx.obj['config']
 
     # lookup the channel alias in the configuration
+    if not channel.startswith('/'):
+        channel = '/' + channel
     _channel = _lookup_channel_alias(cfg, channel)
+    ni_device = _channel.split('/')[1]
 
-    # try to extract the NI device name from the channel
-    if _channel.startswith('/'):
-        ni_device = _channel.split('/')[1]
-    else:
-        ni_device = _channel.split('/')[0]
-
-    # check duty cycle
+    # check if the device is a valid NI-DAQmx device    # check duty cycle
     if not (0 < duty_cycle.m_as('') < 1):
         raise click.BadParameter(
             f'Duty cycle must be in the range (0%, 100%), got {duty_cycle.m_as("")}'
@@ -384,24 +381,24 @@ def pulsetrain(
             )
             channel = task.co_channels.add_co_pulse_chan_freq(
                 f'{ni_device}/ctr0',
-                units=nidaqmx.constants.FrequencyUnits.HZ,
                 freq=frequency.m_as('Hz'),
                 idle_state=_idle_state,
                 initial_delay=initial_delay.m_as('s'),
                 duty_cycle=duty_cycle.m_as(''),
             )
+            pulse_width = duty_cycle / frequency
         elif on_time is not None and off_time is not None:
             logger.info(
                 f'Generating pulse train with on time {on_time:~P} and off time {off_time:~P}'
             )
             channel = task.co_channels.add_co_pulse_chan_time(
                 f'{ni_device}/ctr0',
-                units=nidaqmx.constants.TimeUnits.SECONDS,
                 idle_state=_idle_state,
                 initial_delay=initial_delay.m_as('s'),
-                low_time=on_time.m_as('s'),
-                high_time=off_time.m_as('s'),
+                low_time=off_time.m_as('s'),
+                high_time=on_time.m_as('s'),
             )
+            pulse_width = on_time
         channel.co_pulse_term = _channel
         task.timing.cfg_implicit_timing(
             sample_mode=nidaqmx.constants.AcquisitionType.CONTINUOUS
@@ -409,14 +406,18 @@ def pulsetrain(
 
         channel = task_input.ci_channels.add_ci_count_edges_chan(
             f'{ni_device}/ctr1',
-            edge=nidaqmx.constants.Edge.RISING,
             initial_count=0,
             count_direction=nidaqmx.constants.CountDirection.COUNT_UP,
+            edge=(
+                nidaqmx.constants.Edge.RISING
+                if idle_state == 'low'
+                else nidaqmx.constants.Edge.FALLING
+            ),
         )
         channel.ci_count_edges_term = _channel
 
-        task.start()
         task_input.start()
+        task.start()
         t0 = datetime.now()
         try:
             edge_counts = 0
@@ -437,6 +438,8 @@ def pulsetrain(
                         logger.info(
                             f'Reached the specified number of pulses: {num_pulses:n}'
                         )
+                        # make sure to wait for the last pulse to finish
+                        time.sleep(pulse_width.m_as('s'))
                         break
                     _previous_edge_counts = edge_counts
 
