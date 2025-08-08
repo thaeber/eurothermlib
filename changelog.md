@@ -1,4 +1,16 @@
 <!-- insertion marker -->
+<a name="v0.1.9"></a>
+
+## [v0.1.9](https://github.com/thaeber/eurothermlib/compare/v0.1.8...v0.1.9) (2025-08-08)
+
+### Features
+
+- create pulse train of trigger pulses (#7) ([b1dd8ac](https://github.com/thaeber/eurothermlib/commit/b1dd8ac32aeec652230ab52cc76d17704d9791c5))
+
+### Code Refactoring
+
+- re-using validation methods across cli sub-commands ([b80b7e3](https://github.com/thaeber/eurothermlib/commit/b80b7e379ae36a663567fe6d3211631da39af552))
+- Ignore ruff error E501 in default app config ([1e99f52](https://github.com/thaeber/eurothermlib/commit/1e99f52cb7b9c3bb78f25c9bfdd2bac7389c5b82))
 
 <a name="v0.1.8"></a>
 
@@ -15,6 +27,10 @@
 ### Code Refactoring
 
 - Pass time quantity for gate width to `_send_trigger` ([4143ab5](https://github.com/thaeber/eurothermlib/commit/4143ab5078a8f71b64c367545cb96ff7bf17490d))
+
+### Chore
+
+- pre-commit run --all ([5afade5](https://github.com/thaeber/eurothermlib/commit/5afade5c8153d6ac3eaffc964e39261cfc993b28))
 
 <a name="v0.1.7"></a>
 
@@ -122,3 +138,4 @@
 ### Build
 
 - **deps:** upgrading to python 3.11 ([1d97532](https://github.com/thaeber/eurothermlib/commit/1d97532f34a697726704dee69d1e9a33df5be30e))
+
