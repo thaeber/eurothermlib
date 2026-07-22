@@ -1,52 +1,56 @@
-[tool.poetry]
+[project]
 name = "eurothermlib"
 version = "0.1.9"
-description = "Simple Python package for operating a Eurotherm controller ."
-authors = ["Thomas Haeber <thomas.haeber@kit.edu>"]
+description = "EurothermLib is a Python library for interfacing with Eurotherm devices."
 readme = "README.md"
-packages = [{ include = "eurothermlib", from = "src" }]
+authors = [
+    { name = "thaeber", email = "thomas.haeber@kit.edu" }
+]
+requires-python = ">=3.14"
+dependencies = [
+    "click>=8.4.2",
+    "cloup>=3.1.0",
+    "grpcio[protobuf]>=1.82.1",
+    "nidaqmx>=1.5.0",
+    "numpy>=2.5.1",
+    "omegaconf>=2.3.1",
+    "pint>=0.25.3",
+    "pydantic>=2.13.4",
+    "pymodbus[serial]>=3.14.0",
+    "reactivex>=5.0.0",
+    "rich>=15.0.0",
+    "tenacity>=9.1.4",
+    "textual>=8.2.8",
+    "textual-plotext>=1.0.1",
+    "xarray>=2026.7.0",
+]
 
-[tool.poetry.scripts]
-eurotherm = 'eurothermlib.cli.cli:cli'
-
-[tool.poetry.dependencies]
-python = ">=3.11,<3.12"
-click = "^8.1.4"
-numpy = "^1.25.1"
-pint = ">=0.24"
-rich = "^13.4.2"
-grpcio = { extras = ["protobuf"], version = "^1.69.0" }
-omegaconf = "^2.3.0"
-pydantic = "^2.7.4"
-xarray = "^2024.6.0"
-reactivex = "^4.0.4"
-pymodbus = { extras = ["serial"], version = "^3.6.9" }
-tenacity = "^8.4.2"
-textual = "^0.71.0"
-textual-plotext = "^0.2.1"
-nidaqmx = "^1.0.2"
-cloup = "^3.0.8"
-
-
-[tool.poetry.group.dev.dependencies]
-pytest = "^7.4.0"
-pylint = "^2.17.4"
-jupyter = "^1.0.0"
-black = "^23.7.0"
-toolz = "^0.12.0"
-pytest-watcher = "^0.4.2"
-git-changelog = "^2.5.2"
-pre-commit = "^3.7.1"
-bump-my-version = "^0.21.1"
-# grpcio-tools = "^1.64.1"
-grpc-stubs = "^1.53.0.5"
-mypy-protobuf = "^3.6.0"
-matplotlib = "^3.9.0"
-textual-dev = "^1.5.1"
+[project.scripts]
+eurotherm = "eurothermlib.cli.cli:cli"
 
 [build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
+requires = ["uv_build>=0.10.1,<0.11.0"]
+build-backend = "uv_build"
+
+[dependency-groups]
+dev = [
+    "black>=26.5.1",
+    "bump-my-version>=1.4.1",
+    "git-changelog>=2.9.4",
+    "grpc-stubs>=1.53.0.6",
+    "ipykernel>=7.3.0",
+    "jupyter>=1.1.1",
+    "matplotlib>=3.11.1",
+    "pip>=26.1.2",
+    "pre-commit>=4.6.0",
+    "pytest>=9.1.1",
+    "pytest-watcher>=0.6.3",
+    "textual-dev>=1.8.0",
+    "toolz>=1.1.0",
+]
+
+[tool.uv]
+python-preference = "only-managed"
 
 [tool.black]
 skip-string-normalization = true
