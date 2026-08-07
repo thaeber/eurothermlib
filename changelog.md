@@ -1,7 +1,15 @@
 <!-- insertion marker -->
 <a name="v0.2.0"></a>
 
-## [v0.2.0](https://github.com/thaeber/eurothermlib/compare/v0.1.9...v0.2.0) (2026-08-07)
+## [v0.2.0](https://github.com/thaeber/eurothermlib/compare/v0.1.10...v0.2.0) (2026-08-07)
+
+### Bug Fixes
+
+- Pinning dependency version on `pyproject.toml` ([ce1efea](https://github.com/thaeber/eurothermlib/commit/ce1efea843aa8e14de17364ea89042f7fe8da1ca))
+
+<a name="v0.1.10"></a>
+
+## [v0.1.10](https://github.com/thaeber/eurothermlib/compare/v0.1.9...v0.1.10) (2026-08-07)
 
 ### Bug Fixes
 
