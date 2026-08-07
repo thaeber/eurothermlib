@@ -1,4 +1,16 @@
 <!-- insertion marker -->
+<a name="v0.2.0"></a>
+
+## [v0.2.0](https://github.com/thaeber/eurothermlib/compare/v0.1.9...v0.2.0) (2026-08-07)
+
+### Bug Fixes
+
+- Rename `slave` to `device_id` ([58cb313](https://github.com/thaeber/eurothermlib/commit/58cb313bdf9d22fadc437f4195244e9fd1e6055a))
+
+### Features
+
+- Switch to Astral `uv` as dependency manager ([75af2fb](https://github.com/thaeber/eurothermlib/commit/75af2fbe835eadc330380b9101ac72c8210a9131))
+
 <a name="v0.1.9"></a>
 
 ## [v0.1.9](https://github.com/thaeber/eurothermlib/compare/v0.1.8...v0.1.9) (2025-08-08)
