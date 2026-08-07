@@ -36,7 +36,7 @@ class ModbusSerialConnection:
         return self.client.read_holding_registers(
             address=register_address,
             count=count,
-            slave=unit_address,
+            device_id=unit_address,
         )
 
     def read_holding_registers(
@@ -59,7 +59,7 @@ class ModbusSerialConnection:
             )
         )
         return self.client.write_register(
-            address=register_address, value=value, slave=unit_address
+            address=register_address, value=value, device_id=unit_address
         )
 
     def write_holding_register(
