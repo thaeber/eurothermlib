@@ -567,7 +567,7 @@ wheels = [
 
 [[package]]
 name = "eurothermlib"
-version = "0.1.9"
+version = "0.1.10"
 source = { editable = "." }
 dependencies = [
     { name = "click" },
@@ -606,21 +606,21 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "click", specifier = ">=8.4.2" },
-    { name = "cloup", specifier = ">=3.1.0" },
-    { name = "grpcio", extras = ["protobuf"], specifier = ">=1.82.1" },
-    { name = "nidaqmx", specifier = ">=1.5.0" },
-    { name = "numpy", specifier = ">=2.5.1" },
-    { name = "omegaconf", specifier = ">=2.3.1" },
-    { name = "pint", specifier = ">=0.25.3" },
-    { name = "pydantic", specifier = ">=2.13.4" },
-    { name = "pymodbus", extras = ["serial"], specifier = ">=3.14.0" },
-    { name = "reactivex", specifier = ">=5.0.0" },
-    { name = "rich", specifier = ">=15.0.0" },
-    { name = "tenacity", specifier = ">=9.1.4" },
-    { name = "textual", specifier = ">=8.2.8" },
-    { name = "textual-plotext", specifier = ">=1.0.1" },
-    { name = "xarray", specifier = ">=2026.7.0" },
+    { name = "click", specifier = "==8.4.2" },
+    { name = "cloup", specifier = "==3.1.0" },
+    { name = "grpcio", extras = ["protobuf"], specifier = "==1.82.1" },
+    { name = "nidaqmx", specifier = "==1.5.0" },
+    { name = "numpy", specifier = "==2.5.1" },
+    { name = "omegaconf", specifier = "==2.3.1" },
+    { name = "pint", specifier = "==0.25.3" },
+    { name = "pydantic", specifier = "==2.13.4" },
+    { name = "pymodbus", extras = ["serial"], specifier = "==3.14.0" },
+    { name = "reactivex", specifier = "==5.0.0" },
+    { name = "rich", specifier = "==15.0.0" },
+    { name = "tenacity", specifier = "==9.1.4" },
+    { name = "textual", specifier = "==8.2.8" },
+    { name = "textual-plotext", specifier = "==1.0.1" },
+    { name = "xarray", specifier = "==2026.7.0" },
 ]
 
 [package.metadata.requires-dev]
