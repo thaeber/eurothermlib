@@ -460,7 +460,7 @@ def pulsetrain(
         except KeyboardInterrupt:
             pass
         finally:
-            print(f"\nAcquired {edge_counts:n} total counts.")
+            logger.info(f"\nAcquired {edge_counts:n} total counts.")
 
             task_input.stop()
             task.stop()
