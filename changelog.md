@@ -1,7 +1,15 @@
 <!-- insertion marker -->
-<a name="v0.2.0"></a>
+<a name="v0.1.12"></a>
 
-## [v0.2.0](https://github.com/thaeber/eurothermlib/compare/v0.1.10...v0.2.0) (2026-08-07)
+## [v0.1.12](https://github.com/thaeber/eurothermlib/compare/v0.1.11...v0.1.12) (2026-08-11)
+
+### Bug Fixes
+
+- Replace `printf` with `logger.info` ([4a286ce](https://github.com/thaeber/eurothermlib/commit/4a286ce72f5f94cb3d7d2fd767f52fe56e9456e7))
+
+<a name="v0.1.11"></a>
+
+## [v0.1.11](https://github.com/thaeber/eurothermlib/compare/v0.1.10...v0.1.11) (2026-08-07)
 
 ### Bug Fixes
 
