@@ -115,13 +115,13 @@ class EurothermIO(metaclass=SingletonMeta):
                 if self._observable is None:
                     logger.info('Creating observable for IO')
                     self._observable = reactivex.Subject[TData]()
+                return self._observable
             else:
                 logger.error('Acquiring lock timed out')
                 return None
         finally:
             if acquired:
                 self._lock.release()
-                return self._observable
 
     def _emit(self, data: TData):
         observable = self._try_get_observable()
