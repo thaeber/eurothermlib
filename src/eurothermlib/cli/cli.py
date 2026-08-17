@@ -3,7 +3,6 @@ import logging
 import os
 import sys
 from time import sleep
-from typing import Type
 
 import click
 import cloup
@@ -48,7 +47,7 @@ def validate_device(ctx: click.Context, param, value):
     if value is None:
         if len(cfg.devices) == 1:
             value = cfg.devices[0].name
-            logger.info(f'Using [{repr(value)}] as default device.')
+            logger.info(f'Using [{value!r}] as default device.')
         else:
             msg = (
                 'There is more than one device defined in the '
@@ -58,7 +57,7 @@ def validate_device(ctx: click.Context, param, value):
             raise click.BadParameter(msg)
 
     if value not in [d.name for d in cfg.devices]:
-        msg = f'Unknown device. The device [{repr(value)}] is not configured.'
+        msg = f'Unknown device. The device [{value!r}] is not configured.'
         logger.error(msg)
         raise click.BadParameter(msg)
 
@@ -113,7 +112,7 @@ def validate_temperature_rate(ctx: click.Context, param, value):
         )
 
 
-def validate_quantity(qtype: Type[TypedQuantity]):
+def validate_quantity(qtype: type[TypedQuantity]):
     def wrapper(ctx: click.Context, param, value):
         if value is None:
             return None
@@ -151,7 +150,7 @@ def cli(ctx: click.Context, config_filename: str):
     logger.info('Using configuration:')
     logger.debug(pretty_repr(config.model_dump()))
 
-    ctx.obj = dict(config=config)
+    ctx.obj = {'config': config}
 
 
 @cli.command()
@@ -192,8 +191,8 @@ def current(ctx: click.Context, device: str, unit: str):
         logger.info(f'workingSetpoint={values.workingSetpoint.to(unit):.2f~#P}')
         logger.info(f'remoteSetpoint={values.remoteSetpoint.to(unit):.2f~#P}')
         logger.info(f'workingOutput={values.workingOutput:.2f~#P}')
-        logger.info(f'rampStatus={repr(values.rampStatus)}')
-        logger.info(f'status={repr(values.status)}')
+        logger.info(f'rampStatus={values.rampStatus!r}')
+        logger.info(f'status={values.status!r}')
     except grpc.RpcError as ex:
         logger.error('Remote RPC call failed.')
         logger.error(ex)

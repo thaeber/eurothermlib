@@ -14,7 +14,6 @@ logger = logging.getLogger(__name__)
 @cli.group()
 def alarm():
     """Acknowledge/read alarm status."""
-    pass
 
 
 @alarm.command()

@@ -1,6 +1,6 @@
-from _collections_abc import Awaitable
 import logging
 import threading
+from _collections_abc import Awaitable
 from concurrent import futures
 from queue import Empty as EmptyError
 from queue import Queue
@@ -87,7 +87,7 @@ class EurothermServicer(service_pb2_grpc.EurothermServicer):
                     yield da.to_grpc_response()
                 except EmptyError:
                     pass
-        except Exception as ex:
+        except Exception as ex:  # noqa BLE001
             logger.error(ex)
         finally:
             # dispose subscription once iteration completes or terminates
@@ -100,10 +100,8 @@ class EurothermServicer(service_pb2_grpc.EurothermServicer):
         context: grpc.ServicerContext,
     ):
         logger.info(
-            (
-                f'[Request] [{repr(request.deviceName)}] Get current '
-                'process values & instrument status'
-            )
+            f'[Request] [{request.deviceName!r}] Get current '
+            'process values & instrument status'
         )
 
         # start acquisition thread if necessary
@@ -133,10 +131,8 @@ class EurothermServicer(service_pb2_grpc.EurothermServicer):
                 state = RemoteSetpointState.DISBALE
 
         logger.info(
-            (
-                f'[Request] [{repr(request.deviceName)}] Setting local '
-                f'remote setpoint selector to: {repr(state)}'
-            )
+            f'[Request] [{request.deviceName!r}] Setting local '
+            f'remote setpoint selector to: {state!r}'
         )
         self.io.toggle_remote_setpoint(request.deviceName, state)
 
@@ -152,10 +148,8 @@ class EurothermServicer(service_pb2_grpc.EurothermServicer):
 
         value = TemperatureQ(request.value, 'K')
         logger.info(
-            (
-                f'[Request] [{repr(request.deviceName)}] '
-                f'Set remote setpoint to: {value:.2f~P}'
-            )
+            f'[Request] [{request.deviceName!r}] '
+            f'Set remote setpoint to: {value:.2f~P}'
         )
         self.io.set_remote_setpoint(request.deviceName, value)
 
@@ -170,10 +164,7 @@ class EurothermServicer(service_pb2_grpc.EurothermServicer):
         to = TemperatureQ(request.target, 'K')
         rate = TemperatureRateQ(request.rate, 'K/min')
         logger.info(
-            (
-                f'[Request] [{repr(device)}] '
-                f'Temperature ramp to {to:.2f~P} @ {rate:.2f~P}'
-            )
+            f'[Request] [{device!r}] ' f'Temperature ramp to {to:.2f~P} @ {rate:.2f~P}'
         )
 
         # start acquisition thread if necessary
@@ -223,7 +214,7 @@ class EurothermServicer(service_pb2_grpc.EurothermServicer):
         # start acquisition thread if necessary
         self.io.start()
 
-        logger.info(f'[Request] [{repr(request.deviceName)}] Stop temperature ramp')
+        logger.info(f'[Request] [{request.deviceName!r}] Stop temperature ramp')
         self.io.stop_temperature_ramp(request.deviceName)
 
         return service_pb2.Empty()
@@ -236,7 +227,7 @@ class EurothermServicer(service_pb2_grpc.EurothermServicer):
         # start acquisition thread if necessary
         self.io.start()
 
-        logger.info(f'[Request] [{repr(request.deviceName)}] Acknowledge all alarms')
+        logger.info(f'[Request] [{request.deviceName!r}] Acknowledge all alarms')
         self.io.acknowledge_all_alarms(request.deviceName)
         return service_pb2.Empty()
 
@@ -262,7 +253,7 @@ class EurothermClient:
             yield TData.from_grpc_response(response)
 
     def current_process_values(self, device: str):
-        logger.info(f'[{repr(device)}] Reading process values')
+        logger.info(f'[{device!r}] Reading process values')
         request = service_pb2.GetProcessValuesRequest(deviceName=device)
         response = self._client.GetProcessValues(request, timeout=self.timeout)
         return TData.from_grpc_response(response)
@@ -275,11 +266,11 @@ class EurothermClient:
         match state:
             case RemoteSetpointState.ENABLE:
                 _state = service_pb2.RemoteSetpointState.ENABLED
-                logger.info(f'[{repr(device)}] Enabling remote setpoint')
+                logger.info(f'[{device!r}] Enabling remote setpoint')
             case RemoteSetpointState.DISBALE:
                 _state = service_pb2.RemoteSetpointState.DISABLED
-                logger.info(f'[{repr(device)}] Disabling remote setpoint')
-                logger.warn(f'[{repr(device)}] Falling back to internal setpoint')
+                logger.info(f'[{device!r}] Disabling remote setpoint')
+                logger.warning(f'[{device!r}] Falling back to internal setpoint')
             case _:
                 logger.error(f'Unknown remote setpoint state: {state}')
         request = service_pb2.ToggleRemoteSetpointRequest(
@@ -289,7 +280,7 @@ class EurothermClient:
         self._client.ToggleRemoteSetpoint(request, timeout=self.timeout)
 
     def set_remote_setpoint(self, device: str, value: TemperatureQ):
-        logger.info(f'[{repr(device)}] Setting remote setpoint: {value:.2f~P}')
+        logger.info(f'[{device!r}] Setting remote setpoint: {value:.2f~P}')
         request = service_pb2.SetRemoteSetpointRequest(
             deviceName=device,
             value=value.m_as('K'),
@@ -299,9 +290,7 @@ class EurothermClient:
     def start_temperature_ramp(
         self, device: str, to: TemperatureQ, rate: TemperatureRateQ
     ):
-        logger.info(
-            (f'[{repr(device)}] ' f'Temperature ramp to {to:.2f~P} @ {rate:.2f~P}')
-        )
+        logger.info(f'[{device!r}] ' f'Temperature ramp to {to:.2f~P} @ {rate:.2f~P}')
         request = service_pb2.StartTemperatureRampRequest(
             deviceName=device,
             target=to.m_as('K'),
@@ -311,12 +300,12 @@ class EurothermClient:
             yield TemperatureQ(response.current, 'K')
 
     def stop_temperature_ramp(self, device: str):
-        logger.info((f'[{repr(device)}] ' f'Stopping temperature ramp'))
+        logger.info(f'[{device!r}] ' f'Stopping temperature ramp')
         request = service_pb2.StopTemperatureRampRequest(deviceName=device)
         self._client.StopTemperatureRamp(request)
 
     def acknowledge_all_alarms(self, device: str):
-        logger.info(f'[{repr(device)}] Acknowledging all alarms')
+        logger.info(f'[{device!r}] Acknowledging all alarms')
         self._client.AcknowledgeAllAlarms(
             service_pb2.AcknowlegdeAllAlarmsRequest(deviceName=device)
         )

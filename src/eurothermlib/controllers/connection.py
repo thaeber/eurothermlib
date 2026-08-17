@@ -1,13 +1,16 @@
-from concurrent import futures
 import logging
-from ..configuration import SerialPortConfig
+from concurrent import futures
+from typing import ClassVar
+
 from pymodbus.client import ModbusSerialClient
+
+from ..configuration import SerialPortConfig
 
 logger = logging.getLogger(__name__)
 
 
 class ModbusSerialConnection:
-    __connections__ = {}
+    __connections__: ClassVar[dict[str, ModbusSerialConnection]] = {}
 
     def __init__(self, cfg: SerialPortConfig):
         self.client = ModbusSerialClient(cfg.port, baudrate=cfg.baudRate)
@@ -28,10 +31,8 @@ class ModbusSerialConnection:
         self, unit_address: int, register_address: int, count: int
     ):
         logger.debug(
-            (
-                f'Read holding register(s): unit={unit_address},'
-                f'register={register_address}, count={count}'
-            )
+            f'Read holding register(s): unit={unit_address},'
+            f'register={register_address}, count={count}'
         )
         return self.client.read_holding_registers(
             address=register_address,
@@ -53,10 +54,8 @@ class ModbusSerialConnection:
         self, unit_address: int, register_address: int, value: int
     ):
         logger.debug(
-            (
-                f'Write holding register: unit={unit_address},'
-                f'register={register_address}, value={value}'
-            )
+            f'Write holding register: unit={unit_address},'
+            f'register={register_address}, value={value}'
         )
         return self.client.write_register(
             address=register_address, value=value, device_id=unit_address

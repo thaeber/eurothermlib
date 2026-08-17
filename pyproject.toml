@@ -97,7 +97,10 @@ provider = "github"
 sections = "fix,feat,refactor,chore,style,build"
 template = "angular"
 
-[tool.ruff.per-file-ignores]
+[tool.ruff.lint]
+ignore = ["C408", "DTZ005", "DTZ001"]
+
+[tool.ruff.lint.per-file-ignores]
 "service_pb2.py" = ["E501"]
 "service_pb2.pyi" = ["E501"]
 "service_pb2_grpc.py" = ["E501"]

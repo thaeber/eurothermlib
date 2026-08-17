@@ -214,12 +214,10 @@ class EurothermDisplay(Static):
             plt.xlabel('minutes')
             self.query_one(PlotextPlot).refresh()
         else:
-            logger.warn(
-                (
-                    f'Received values with non-matching deviceName '
-                    f'({values.deviceName}) for EurothermDisplay with '
-                    f'id {self.id}'
-                )
+            logger.warning(
+                f'Received values with non-matching deviceName '
+                f'({values.deviceName}) for EurothermDisplay with '
+                f'id {self.id}'
             )
 
     def on_mount(self):

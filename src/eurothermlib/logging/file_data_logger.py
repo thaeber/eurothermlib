@@ -1,7 +1,8 @@
 import logging
+from collections.abc import Iterable, Mapping
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Iterable, List, Mapping, Optional
+from typing import Any
 
 import pandas as pd
 import pint
@@ -15,7 +16,7 @@ class FileDataLogger:
     def __init__(self, cfg: LoggingConfig):
         self.cfg = cfg
         self.last_rotation: datetime = datetime.now()
-        self.current_file: Optional[Path] = None
+        self.current_file: Path | None = None
 
     def log_data(self, data: pd.DataFrame):
         self._ensure_file()
@@ -46,13 +47,12 @@ class FileDataLogger:
         else:
             return self.cfg.format % value
 
-    def _join_columns(self, values: List[str]):
+    def _join_columns(self, values: list[str]):
         return self.cfg.separator.join(values)
 
     def _write(self, lines: Iterable[str]):
         with open(self.current_file, mode='a', encoding='utf-8') as file:
-            for line in lines:
-                file.write(f'{line}\n')
+            file.writelines(f'{line}\n' for line in lines)
 
     def _ensure_file(self):
         # current time

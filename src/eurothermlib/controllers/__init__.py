@@ -9,11 +9,11 @@ from .generic import GenericEurothermController
 from .series3200 import EurothermSeries3200
 
 __all__ = [
-    InstrumentStatus,
-    ProcessValues,
-    EurothermController,
-    EurothermSimulator,
-    ModbusSerialConnection,
-    GenericEurothermController,
-    EurothermSeries3200,
+    'EurothermController',
+    'EurothermSeries3200',
+    'EurothermSimulator',
+    'GenericEurothermController',
+    'InstrumentStatus',
+    'ModbusSerialConnection',
+    'ProcessValues',
 ]

@@ -2,8 +2,8 @@ import logging
 
 import click
 
-from .cli import cli, get_configuration
 from ..ui.textual import EurothermApp
+from .cli import cli, get_configuration
 
 logger = logging.getLogger(__name__)
 
@@ -15,7 +15,6 @@ def ui():
     to display process values. Multiple UIs may be started
     at the same time.
     """
-    pass
 
 
 @ui.command()

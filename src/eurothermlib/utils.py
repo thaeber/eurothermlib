@@ -1,7 +1,7 @@
 # %%
 import re
 import tokenize
-from typing import Any, ClassVar, Type, TypeAlias
+from typing import Any, ClassVar
 
 import pint
 from pydantic import GetCoreSchemaHandler
@@ -91,7 +91,7 @@ class TypedQuantity(pint.Quantity):
 
     @classmethod
     def __get_pydantic_core_schema__(
-        cls, source_type: Type[Any], handler: GetCoreSchemaHandler
+        cls, source_type: type[Any], handler: GetCoreSchemaHandler
     ) -> CoreSchema:
         # assert source_type is Quantity
         # print(source_type, type(source_type))
@@ -111,12 +111,12 @@ class TypedQuantity(pint.Quantity):
         return str(value)
 
 
-VoltageQ: TypeAlias = TypedQuantity['[electric_potential]']
-TemperatureQ: TypeAlias = TypedQuantity['[temperature]']
-TemperatureRateQ: TypeAlias = TypedQuantity['[temperature]/[time]']
-DimensionlessQ: TypeAlias = TypedQuantity['[]']
-FrequencyQ: TypeAlias = TypedQuantity['1/[time]']
-TimeQ: TypeAlias = TypedQuantity['[time]']
-FractionQ: TypeAlias = TypedQuantity['[]']
+VoltageQ = TypedQuantity['[electric_potential]']
+TemperatureQ = TypedQuantity['[temperature]']
+TemperatureRateQ = TypedQuantity['[temperature]/[time]']
+DimensionlessQ = TypedQuantity['[]']
+FrequencyQ = TypedQuantity['1/[time]']
+TimeQ = TypedQuantity['[time]']
+FractionQ = TypedQuantity['[]']
 
 # %%

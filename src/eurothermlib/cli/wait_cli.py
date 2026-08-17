@@ -5,12 +5,12 @@ from datetime import datetime
 import click
 import grpc
 from rich.progress import Progress
-from eurothermlib.utils import TemperatureQ, TimeQ
 
 from eurothermlib.configuration import Config
+from eurothermlib.utils import TemperatureQ, TimeQ
 
 from ..server import servicer
-from .cli import cli, device_option, validate_time, validate_temperature
+from .cli import cli, device_option, validate_temperature, validate_time
 
 logger = logging.getLogger(__name__)
 
@@ -18,7 +18,6 @@ logger = logging.getLogger(__name__)
 @cli.group()
 def wait():
     """Wait for timespan or until a temperature is reached."""
-    pass
 
 
 @wait.command()

@@ -1,6 +1,8 @@
 from datetime import datetime
+
 import pandas as pd
 import pint
+
 from eurothermlib.configuration import LoggingConfig
 from eurothermlib.controllers.controller import InstrumentStatus
 from eurothermlib.logging import FileDataLogger

@@ -24,7 +24,6 @@ logger = logging.getLogger(__name__)
 @cli.group()
 def remote():
     """Enable/disable remote setpoint."""
-    pass
 
 
 @remote.command()
@@ -39,14 +38,14 @@ def enable(ctx: click.Context, device: str):
 
         client.toggle_remote_setpoint(device, servicer.RemoteSetpointState.ENABLE)
 
-        logger.info(f'[{repr(device)}] Checking remote setpoint status')
+        logger.info(f'[{device!r}] Checking remote setpoint status')
         status = client.current_process_values(device).status
         if InstrumentStatus.LocalRemoteSPSelect not in status:
-            logger.warning(f'[{repr(device)}] Could not enable remote setpoint')
-            logger.warning(f'[{repr(device)}] Instrument status: {pretty_repr(status)}')
+            logger.warning(f'[{device!r}] Could not enable remote setpoint')
+            logger.warning(f'[{device!r}] Instrument status: {pretty_repr(status)}')
         else:
-            logger.info(f'[{repr(device)}] Remote setpoint successfully enabled')
-            logger.info(f'[{repr(device)}] Instrument status: {pretty_repr(status)}')
+            logger.info(f'[{device!r}] Remote setpoint successfully enabled')
+            logger.info(f'[{device!r}] Instrument status: {pretty_repr(status)}')
 
     except grpc.RpcError as ex:
         logger.error('Remote RPC call failed.')
@@ -65,14 +64,14 @@ def disable(ctx: click.Context, device: str):
 
         client.toggle_remote_setpoint(device, servicer.RemoteSetpointState.DISBALE)
 
-        logger.info(f'[{repr(device)}] Checking remote setpoint status')
+        logger.info(f'[{device!r}] Checking remote setpoint status')
         status = client.current_process_values(device).status
         if InstrumentStatus.LocalRemoteSPSelect in status:
-            logger.warning(f'[{repr(device)}] Could not disable remote setpoint')
-            logger.warning(f'[{repr(device)}] Instrument status: {pretty_repr(status)}')
+            logger.warning(f'[{device!r}] Could not disable remote setpoint')
+            logger.warning(f'[{device!r}] Instrument status: {pretty_repr(status)}')
         else:
-            logger.info(f'[{repr(device)}] Remote setpoint successfully disabled')
-            logger.info(f'[{repr(device)}] Instrument status: {pretty_repr(status)}')
+            logger.info(f'[{device!r}] Remote setpoint successfully disabled')
+            logger.info(f'[{device!r}] Instrument status: {pretty_repr(status)}')
 
     except grpc.RpcError as ex:
         logger.error('Remote RPC call failed.')
@@ -113,7 +112,6 @@ def set(ctx: click.Context, temperature: TemperatureQ, device: str):
 @remote.group()
 def ramp():
     """Start/stop temperature ramp"""
-    pass
 
 
 @ramp.command(short_help='Start temperature ramp with selectable rate.')

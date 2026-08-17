@@ -41,7 +41,7 @@ class GenericEurothermController(EurothermController):
     @tenacity.retry(
         reraise=True,
         stop=tenacity.stop_after_attempt(3),
-        before_sleep=tenacity.before_sleep_log(logger, logging.WARN),
+        before_sleep=tenacity.before_sleep_log(logger, logging.WARNING),
     )
     def _read_int_registers(self, address, num_registers=1):
         try:
@@ -51,7 +51,8 @@ class GenericEurothermController(EurothermController):
                 num_registers,
             ).result()
         except ModbusException as ex:
-            raise ex
+            logger.debug("Modbus exception occurred", exc_info=ex)
+            raise
         if response.isError():
             raise ModbusException(response.message)
         else:
@@ -70,7 +71,7 @@ class GenericEurothermController(EurothermController):
     @tenacity.retry(
         reraise=True,
         stop=tenacity.stop_after_attempt(3),
-        before_sleep=tenacity.before_sleep_log(logger, logging.WARN),
+        before_sleep=tenacity.before_sleep_log(logger, logging.WARNING),
     )
     def _write_int_register(self, address: int, value: int):
         try:
@@ -80,7 +81,8 @@ class GenericEurothermController(EurothermController):
                 value,
             ).result()
         except ModbusException as ex:
-            raise ex
+            logger.debug("Modbus exception occurred", exc_info=ex)
+            raise
         if response.isError():
             raise ModbusException(response.message)
 
@@ -152,8 +154,8 @@ class GenericEurothermController(EurothermController):
 
     def write_remote_setpoint(self, value: TemperatureQ):
         _value = value.m_as('degC')
-        _value = int(round(_value))
+        _value = int(round(_value))  # noqa: RUF046
         self._write_int_register(GenericAddress.RmSP, _value)
 
     def acknowledge_all_alarms(self):
-        self._write_int_register(GenericAddress.AcALL, int(1))
+        self._write_int_register(GenericAddress.AcALL, 1)

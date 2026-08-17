@@ -1,6 +1,5 @@
 import logging
 from concurrent import futures
-from typing import List
 
 import click
 import pandas as pd
@@ -19,7 +18,6 @@ logger = logging.getLogger(__name__)
 @cli.group()
 def server():
     """Starting/stopping the server used to interact with the devices."""
-    pass
 
 
 # @cli.command(context_settings=_cs)
@@ -40,7 +38,7 @@ def start(ctx):
 
             data_logger = FileDataLogger(cfg.logging)
 
-            def do_log(data: List[TData]):
+            def do_log(data: list[TData]):
                 if data:
                     df = pd.DataFrame(data)
                     data_logger.log_data(df)

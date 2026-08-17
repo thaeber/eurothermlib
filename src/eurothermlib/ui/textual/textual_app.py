@@ -2,20 +2,21 @@ from __future__ import annotations
 
 import logging
 from itertools import cycle
+from typing import ClassVar
 
 import reactivex as rx
 from reactivex import operators as op
 from reactivex.scheduler import ThreadPoolScheduler
-from textual.app import App, ComposeResult
-from textual.message import Message
-from textual.reactive import reactive
-from textual.widgets import Footer, Header
 
 from eurothermlib.configuration import Config, get_configuration
 from eurothermlib.controllers.controller import RemoteSetpointState
 from eurothermlib.server import connect
 from eurothermlib.server.acquisition import TData
 from eurothermlib.utils import TemperatureQ
+from textual.app import App, ComposeResult
+from textual.message import Message
+from textual.reactive import reactive
+from textual.widgets import Footer, Header
 
 from .views.error_screen import ErrorScreen
 from .views.eurotherm_display import EurothermDisplay
@@ -30,15 +31,15 @@ UNITS = cycle(['°C', 'K'])
 class EurothermApp(App):
     """A Textual app to manage stopwatches."""
 
-    CSS_PATH = 'textual_app.css'
-    BINDINGS = [
+    CSS_PATH: ClassVar[str] = 'textual_app.css'
+    BINDINGS: ClassVar[list[tuple[str, str, str]]] = [
         ("d", "toggle_dark", "Toggle dark mode"),
         ("u", "toggle_units", "Toggle units"),
     ]
-    units = reactive(next(UNITS))
+    units: ClassVar[reactive[str]] = reactive(next(UNITS))
 
     class ConnectionLost(Message):
-        def __init__(self, ex: Exception = None):
+        def __init__(self, ex: Exception | None = None):
             self.ex = ex
 
     def __init__(self, config: Config):
@@ -46,7 +47,7 @@ class EurothermApp(App):
         self.cfg = config
 
     def connect_to_server(self):
-        def on_error(ex: Exception = None):
+        def on_error(ex: Exception | None = None):
             self.call_from_thread(
                 self.handle_connection_lost, EurothermApp.ConnectionLost(ex)
             )

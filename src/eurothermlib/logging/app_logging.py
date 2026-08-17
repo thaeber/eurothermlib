@@ -1,6 +1,6 @@
-from datetime import datetime
 import logging
 import logging.handlers
+from datetime import datetime
 from enum import IntFlag, auto
 from pathlib import Path
 
@@ -52,7 +52,7 @@ def configure_app_logging(mode: AppLoggingMode):
             handlers:
                 - console
         disable_existing_loggers: false
-    """  # noqa: E501
+    """
     cfg = OmegaConf.to_object(
         OmegaConf.create(app_logging_config).app_logging,
     )

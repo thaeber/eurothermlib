@@ -2,10 +2,11 @@ import logging
 import threading
 import time
 from abc import ABCMeta
+from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
 from enum import IntFlag, auto
-from typing import Callable, Dict, List, Optional
+from typing import ClassVar
 
 import numpy as np
 import reactivex
@@ -79,31 +80,30 @@ TEmitter = Callable[[TData], None]
 
 
 class SingletonMeta(ABCMeta):
-    _instance = {}
+    _instance: ClassVar[dict[type, object]] = {}
 
     def __call__(cls, *args, **kwargs):
         if cls not in cls._instance:
-            cls._instance[cls] = super(SingletonMeta, cls).__call__(*args, **kwargs)
+            cls._instance[cls] = super().__call__(*args, **kwargs)
         return cls._instance[cls]
 
 
 class EurothermIO(metaclass=SingletonMeta):
-    def __init__(self, cfg: List[DeviceConfig]) -> None:
+    def __init__(self, cfg: list[DeviceConfig]) -> None:
         super().__init__()
         self.cfg = cfg
         self._lock = threading.RLock()
-        self._threads: Dict[str, IOThread] = {}
-        self._observable: Optional[reactivex.Subject[TData]] = None
+        self._threads: dict[str, IOThread] = {}
+        self._observable: reactivex.Subject[TData] | None = None
         self._pool = ThreadPoolScheduler()
 
     def _iter_threads(self):
-        for thread in self._threads.values():
-            yield thread
+        yield from self._threads.values()
 
     def _get_thread(self, device: str):
         with self._lock:
             if device not in self._threads:
-                logger.error(f'[{repr(device)}] Unknown device name')
+                logger.error(f'[{device!r}] Unknown device name')
                 return None
             else:
                 return self._threads[device]
@@ -151,10 +151,8 @@ class EurothermIO(metaclass=SingletonMeta):
                         self._threads[device.name] = thread
                     except ValueError:
                         logger.warning(
-                            (
-                                f'Could not start acquisition thread '
-                                f'for device: {device.name}'
-                            )
+                            f'Could not start acquisition thread '
+                            f'for device: {device.name}'
                         )
             else:
                 logger.debug('Acquisition threads already running.')
@@ -223,7 +221,7 @@ class IOThread(threading.Thread):
             controllers.EurothermSimulator()
         )
         self._remote_setpoint = TemperatureQ(28.0, '°C')
-        self._ramp_thread: Optional[TemperatureRampThread] = None
+        self._ramp_thread: TemperatureRampThread | None = None
 
         match self.device.driver:
             case 'simulate':
@@ -310,11 +308,7 @@ class IOThread(threading.Thread):
             T_start = self.controller.get_process_values().processValue
 
             # start new ramp
-            msg = (
-                'Starting temperature ramp: {0:.2f~P} to {1:.2f~P} @ {2:.2f~P}'.format(
-                    T_start, to, rate
-                )
-            )
+            msg = f'Starting temperature ramp: {T_start:.2f~P} to {to:.2f~P} @ {rate:.2f~P}'
             logger.info(msg)
             self._ramp_thread = TemperatureRampThread(self, T_start, to, rate)
             self._ramp_thread.start()
@@ -323,7 +317,7 @@ class IOThread(threading.Thread):
 
     def stop_temperature_ramp(self):
         with self._lock:
-            if not (self.ramp_status == TemperatureRampState.Running):
+            if self.ramp_status != TemperatureRampState.Running:
                 logger.warning(self.msg('There is no active temperature ramp.'))
                 return
 
@@ -376,7 +370,7 @@ class IOThread(threading.Thread):
         logger.info(self.msg('IO thread terminated'))
 
     def msg(self, text: str):
-        return f'[{repr(self.device.name)}] {text}'
+        return f'[{self.device.name!r}] {text}'
 
 
 class TemperatureRampThread(threading.Thread):

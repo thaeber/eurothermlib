@@ -9,14 +9,14 @@ import grpc
 import nidaqmx
 import nidaqmx.constants
 import pint
-from rich.progress import Progress
 from cloup.constraints import (
     If,
     IsSet,
-    require_all,
     accept_none,
     mutually_exclusive,
+    require_all,
 )
+from rich.progress import Progress
 
 from eurothermlib.configuration import Config
 from eurothermlib.utils import FractionQ, FrequencyQ, TimeQ
@@ -30,7 +30,6 @@ logger = logging.getLogger(__name__)
 @cli.group()
 def trigger():
     """Generate trigger signals."""
-    pass
 
 
 def _lookup_channel_alias(cfg: Config, name: str):
@@ -52,11 +51,13 @@ def state2str(state: bool) -> str:
 
 def _send_trigger_pulse(
     channel: str,
-    width: TimeQ = TimeQ(0.2, 's'),
+    width: TimeQ | str = '0.2s',  # TimeQ(0.2, 's'),
     state: bool | Literal['high', 'low'] = True,
 ):
     logger.info('Sending trigger signal')
-    gate = width.m_as('s')
+    if isinstance(width, str):
+        width = TimeQ(width)  # type: ignore
+    gate = width.m_as('s')  # type: ignore
     if state == 'high':
         state = True
     elif state == 'low':

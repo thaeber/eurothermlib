@@ -4,7 +4,7 @@ from datetime import datetime
 from ipaddress import IPv4Address
 from os import PathLike
 from pathlib import Path
-from typing import Annotated, Dict, List, Literal, Optional
+from typing import Annotated, Literal
 
 from omegaconf import OmegaConf
 from pydantic import BaseModel, ConfigDict, Field, model_validator
@@ -50,13 +50,13 @@ class LoggingConfig(BaseModel):
     separator: str = ";"
     rotate_every: Annotated[TimeQ, Field(validate_default=True)] = '1min'
     write_interval: Annotated[TimeQ, Field(validate_default=True)] = '10s'
-    columns: List[str] = [
+    columns: list[str] = [
         'timestamp',
         'processValue',
         'workingOutput',
         'workingSetpoint',
     ]
-    units: Dict[str, str] = {
+    units: dict[str, str] = {
         'processValue': 'K',
         'workingOutput': '%',
         'workingSetpoint': 'K',
@@ -66,12 +66,10 @@ class LoggingConfig(BaseModel):
     def check_time_intervals(self):
         if self.write_interval >= self.rotate_every:
             raise ValueError(
-                (
-                    f'The write interval of data packets '
-                    f'(write_interval={self.write_interval:~P}) must be '
-                    f'shorter than the rotation interval of data files '
-                    f'(rotate_every={self.rotate_every:~P})'
-                )
+                f'The write interval of data packets '
+                f'(write_interval={self.write_interval:~P}) must be '
+                f'shorter than the rotation interval of data files '
+                f'(rotate_every={self.rotate_every:~P})'
             )
         return self
 
@@ -95,14 +93,14 @@ class LoggingConfig(BaseModel):
 class Config(BaseModel):
     model_config = ConfigDict(extra='forbid')
     server: ServerConfig = ServerConfig()
-    devices: List[DeviceConfig]
-    trigger: List[TriggerConfig] = []
+    devices: list[DeviceConfig]
+    trigger: list[TriggerConfig] = []
     logging: LoggingConfig = LoggingConfig()
 
 
 def get_configuration(
     *,
-    cmd_args: Optional[List[str]] = None,
+    cmd_args: list[str] | None = None,
     filename: str | PathLike = '.eurotherm.yaml',
     use_cli=False,
 ):

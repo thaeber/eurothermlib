@@ -1,13 +1,14 @@
 from datetime import datetime
+
 import pytest
+from google.protobuf.timestamp_pb2 import Timestamp
 from reactivex import operators as op
 
 from eurothermlib.configuration import DeviceConfig
 from eurothermlib.controllers import InstrumentStatus
 from eurothermlib.server.acquisition import EurothermIO, TData, TemperatureRampState
 from eurothermlib.server.proto import service_pb2
-from eurothermlib.utils import TemperatureQ, DimensionlessQ
-from google.protobuf.timestamp_pb2 import Timestamp
+from eurothermlib.utils import DimensionlessQ, TemperatureQ
 
 
 class TestTData:
