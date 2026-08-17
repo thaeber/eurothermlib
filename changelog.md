@@ -1,5 +1,17 @@
 <!-- insertion marker -->
 
+<a name="v0.1.13"></a>
+
+## [v0.1.13](https://github.com/thaeber/eurothermlib/compare/v0.1.12...v0.1.13) (2026-08-17)
+
+### Bug Fixes
+
+- `return`in a `finally` block ([2573348](https://github.com/thaeber/eurothermlib/commit/2573348aea879aeba09faac25ce96d0dc7d6ce32))
+
+### Chore
+
+- run `pre-commit run --all` ([c8192f9](https://github.com/thaeber/eurothermlib/commit/c8192f9347f6903c48037553e6b665a8ece24c95))
+
 <a name="v0.1.12"></a>
 
 ## [v0.1.12](https://github.com/thaeber/eurothermlib/compare/v0.1.11...v0.1.12) (2026-08-11)
