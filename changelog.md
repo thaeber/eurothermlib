@@ -1,4 +1,16 @@
 <!-- insertion marker -->
+<a name="v0.1.14"></a>
+
+## [v0.1.14](https://github.com/thaeber/eurothermlib/compare/v0.1.13...v0.1.14) (2026-09-10)
+
+### Bug Fixes
+
+- Upgrade dependencies to account for httpx2 security advisory ([ec641ef](https://github.com/thaeber/eurothermlib/commit/ec641ef45663d945954a021a90db49a593f80a0f))
+
+### Chore
+
+- Upgrade dependencies ([d2f616a](https://github.com/thaeber/eurothermlib/commit/d2f616a75971bea8fe8b7fc7d0025cdbfdd30f32))
+- Update `uv.lock` ([e2c1f70](https://github.com/thaeber/eurothermlib/commit/e2c1f70fd2513bdcfeafe2c53502d7291b5525af))
 
 <a name="v0.1.13"></a>
 
@@ -179,3 +191,4 @@
 ### Build
 
 - **deps:** upgrading to python 3.11 ([1d97532](https://github.com/thaeber/eurothermlib/commit/1d97532f34a697726704dee69d1e9a33df5be30e))
+
