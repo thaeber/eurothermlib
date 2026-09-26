@@ -8,6 +8,7 @@ import cloup
 import grpc
 import nidaqmx
 import nidaqmx.constants
+import nidaqmx.system
 import pint
 from cloup.constraints import (
     If,
@@ -245,7 +246,7 @@ def pulse(ctx: click.Context, device: str, channel: str, width: TimeQ, level: st
 @trigger.command()
 @click.pass_context
 @device_option
-@click.argument('channel')
+@click.argument('channels', nargs=-1)
 @cloup.option_group(
     'Frequency and Duty Cycle',
     cloup.option(
@@ -331,7 +332,7 @@ def pulse(ctx: click.Context, device: str, channel: str, width: TimeQ, level: st
 def pulsetrain(
     ctx: click.Context,
     device: str,
-    channel: str,
+    channels: tuple[str, ...],
     frequency: FrequencyQ | None,
     duty_cycle: FractionQ,
     on_time: TimeQ | None,
@@ -348,24 +349,40 @@ def pulsetrain(
         - Frequency and duty cycle (e.g. --frequency 1Hz --duty-cycle 50%)
         - On and off times (e.g. --on-time 0.5s --off-time 0.5s)
 
-    The channel should be a programmable function input (PFI) line, such as
+    `channels` should be programmable function input (PFI) lines, such as
     `/dev1/pfi0`. Internally, counter `ctr0` is used to generate the pulses, and
     counter `ctr1` counts the number of pulses produced.
 
     Examples:
 
-        eurotherm pulsetrain dev1/port2/line0 --frequency 1Hz
-        eurotherm pulsetrain dev1/port2/line0 --on-time 0.5s --off-time 0.5s
+        eurotherm pulsetrain /dev1/pfi0 --frequency 1Hz
+        eurotherm pulsetrain /dev1/pfi0 /dev1/pfi12 --on-time 0.5s --off-time 0.5s
     """
     cfg: Config = ctx.obj['config']
 
     # lookup the channel alias in the configuration
-    if not channel.startswith('/'):
-        channel = '/' + channel
-    _channel = _lookup_channel_alias(cfg, channel)
-    ni_device = _channel.split('/')[1]
+    if not channels:
+        raise click.BadParameter('At least one channel must be specified.')
+
+    # lookup channel aliases in the configuration
+    _channels = []
+    for channel in channels:
+        if not channel.startswith('/'):
+            channel = '/' + channel
+        channel = _lookup_channel_alias(cfg, channel)
+        _channels.append(channel)
+
+    # ensure all channels are on the same device
+    devices = {c.split('/')[1] for c in _channels}
+    if len(devices) != 1:
+        raise click.BadParameter('All channels must be on the same device.')
+    ni_device = devices.pop()
+
 
     # check if the device is a valid NI-DAQmx device
+    if ni_device not in nidaqmx.system.System.local().devices.device_names:
+        raise click.BadParameter(f'Device {ni_device} is not a valid NI-DAQmx device.')
+
     # check duty cycle
     if not (0 < duty_cycle.m_as('') < 1):
         raise click.BadParameter(
@@ -382,86 +399,95 @@ def pulsetrain(
             f'Idle state must be either "high" or "low", got {idle_state}'
         )
 
-    # generate the pulse train
-    logger.info(f'Sending trigger burst on channel {channel} [{_channel}]')
-    with nidaqmx.Task() as task, nidaqmx.Task() as task_input:
-        if frequency is not None:
-            logger.info(
-                f'Generating pulse train with frequency {frequency:~P} and '
-                f'duty cycle {duty_cycle:~P}'
-            )
-            co_channel = task.co_channels.add_co_pulse_chan_freq(
-                f'{ni_device}/ctr0',
-                freq=frequency.m_as('Hz'),
-                idle_state=_idle_state,
-                initial_delay=initial_delay.m_as('s'),
-                duty_cycle=duty_cycle.m_as(''),
-            )
-            pulse_width = duty_cycle / frequency
-        elif on_time is not None and off_time is not None:
-            logger.info(
-                f'Generating pulse train with on time {on_time:~P} and off time '
-                f'{off_time:~P}'
-            )
-            co_channel = task.co_channels.add_co_pulse_chan_time(
-                f'{ni_device}/ctr0',
-                idle_state=_idle_state,
-                initial_delay=initial_delay.m_as('s'),
-                low_time=off_time.m_as('s'),
-                high_time=on_time.m_as('s'),
-            )
-            pulse_width = on_time
-        co_channel.co_pulse_term = _channel
-        task.timing.cfg_implicit_timing(
-            sample_mode=nidaqmx.constants.AcquisitionType.CONTINUOUS
-        )
+    # set port routing
+    system = nidaqmx.system.System.local()
+    for c in _channels:
+        system.disconnect_terms(f'/{ni_device}/Ctr0InternalOutput', c)
 
-        ci_channel = task_input.ci_channels.add_ci_count_edges_chan(
-            f'{ni_device}/ctr1',
-            initial_count=0,
-            count_direction=nidaqmx.constants.CountDirection.COUNT_UP,
-            edge=(
-                nidaqmx.constants.Edge.RISING
-                if idle_state == 'low'
-                else nidaqmx.constants.Edge.FALLING
-            ),
-        )
-        ci_channel.ci_count_edges_term = _channel
+    try:
+        # generate the pulse train
+        logger.info(f'Sending trigger burst on channel(s) {channels} [{_channels}]')
+        with nidaqmx.Task() as task, nidaqmx.Task() as task_input:
+            if frequency is not None:
+                logger.info(
+                    f'Generating pulse train with frequency {frequency:~P} and '
+                    f'duty cycle {duty_cycle:~P}'
+                )
+                task.co_channels.add_co_pulse_chan_freq(
+                    f'{ni_device}/ctr0',
+                    freq=frequency.m_as('Hz'),
+                    idle_state=_idle_state,
+                    initial_delay=initial_delay.m_as('s'),
+                    duty_cycle=duty_cycle.m_as(''),
+                )
+                pulse_width = duty_cycle / frequency
+            elif on_time is not None and off_time is not None:
+                logger.info(
+                    f'Generating pulse train with on time {on_time:~P} and off time '
+                    f'{off_time:~P}'
+                )
+                task.co_channels.add_co_pulse_chan_time(
+                    f'{ni_device}/ctr0',
+                    idle_state=_idle_state,
+                    initial_delay=initial_delay.m_as('s'),
+                    low_time=off_time.m_as('s'),
+                    high_time=on_time.m_as('s'),
+                )
+                pulse_width = on_time
+            task.timing.cfg_implicit_timing(
+                sample_mode=nidaqmx.constants.AcquisitionType.CONTINUOUS
+            )
 
-        task_input.start()
-        task.start()
-        t0 = datetime.now()
-        try:
-            edge_counts = 0
-            _previous_edge_counts = 0
-            while True:
-                edge_counts = task_input.read()
-                elapsed_time = (datetime.now() - t0).total_seconds()
-                if (timespan is not None) and (elapsed_time > timespan.m_as('s')):
-                    logger.info(
-                        f'Timespan of {timespan:~P} reached with at total of '
-                        f'{edge_counts} pulses.'
-                    )
-                    break
-                elif edge_counts != _previous_edge_counts:
-                    logger.info(
-                        f'Generated {edge_counts:n} pulses in {elapsed_time:.2f} '
-                        f'seconds'
-                    )
-                    if num_pulses is not None and edge_counts >= num_pulses:
+            ci_channel = task_input.ci_channels.add_ci_count_edges_chan(
+                f'{ni_device}/ctr1',
+                initial_count=0,
+                count_direction=nidaqmx.constants.CountDirection.COUNT_UP,
+                edge=(
+                    nidaqmx.constants.Edge.RISING
+                    if idle_state == 'low'
+                    else nidaqmx.constants.Edge.FALLING
+                ),
+            )
+            ci_channel.ci_count_edges_term = _channels[0]
+
+            task_input.start()
+            task.start()
+            t0 = datetime.now()
+            try:
+                edge_counts = 0
+                _previous_edge_counts = 0
+                while True:
+                    edge_counts = task_input.read()
+                    elapsed_time = (datetime.now() - t0).total_seconds()
+                    if (timespan is not None) and (elapsed_time > timespan.m_as('s')):
                         logger.info(
-                            f'Reached the specified number of pulses: '
-                            f'{num_pulses:n}'
+                            f'Timespan of {timespan:~P} reached with at total of '
+                            f'{edge_counts} pulses.'
                         )
-                        # make sure to wait for the last pulse to finish
-                        time.sleep(pulse_width.m_as('s'))
                         break
-                    _previous_edge_counts = edge_counts
+                    elif edge_counts != _previous_edge_counts:
+                        logger.info(
+                            f'Generated {edge_counts:n} pulses in {elapsed_time:.2f} '
+                            f'seconds'
+                        )
+                        if num_pulses is not None and edge_counts >= num_pulses:
+                            logger.info(
+                                f'Reached the specified number of pulses: '
+                                f'{num_pulses:n}'
+                            )
+                            # make sure to wait for the last pulse to finish
+                            time.sleep(pulse_width.m_as('s'))
+                            break
+                        _previous_edge_counts = edge_counts
 
-        except KeyboardInterrupt:
-            pass
-        finally:
-            logger.info(f"\nAcquired {edge_counts:n} total counts.")
+            except KeyboardInterrupt:
+                pass
+            finally:
+                logger.info(f"\nAcquired {edge_counts:n} total counts.")
 
-            task_input.stop()
-            task.stop()
+                task_input.stop()
+                task.stop()
+    finally:
+        # disconnect port routing
+        for c in _channels:
+            system.disconnect_terms(f'/{ni_device}/Ctr0InternalOutput', c)
