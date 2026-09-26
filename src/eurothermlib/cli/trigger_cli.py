@@ -378,7 +378,6 @@ def pulsetrain(
         raise click.BadParameter('All channels must be on the same device.')
     ni_device = devices.pop()
 
-
     # check if the device is a valid NI-DAQmx device
     if ni_device not in nidaqmx.system.System.local().devices.device_names:
         raise click.BadParameter(f'Device {ni_device} is not a valid NI-DAQmx device.')

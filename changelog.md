@@ -1,4 +1,5 @@
 <!-- insertion marker -->
+
 <a name="v0.1.14"></a>
 
 ## [v0.1.14](https://github.com/thaeber/eurothermlib/compare/v0.1.13...v0.1.14) (2026-09-10)
@@ -191,4 +192,3 @@
 ### Build
 
 - **deps:** upgrading to python 3.11 ([1d97532](https://github.com/thaeber/eurothermlib/commit/1d97532f34a697726704dee69d1e9a33df5be30e))
-
