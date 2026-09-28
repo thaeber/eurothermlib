@@ -487,6 +487,8 @@ def pulsetrain(
 
                 task_input.stop()
                 task.stop()
+    except KeyboardInterrupt:
+        pass
     finally:
         # disconnect port routing
         for c in _channels:
