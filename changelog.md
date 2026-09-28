@@ -1,4 +1,19 @@
 <!-- insertion marker -->
+<a name="v0.1.15"></a>
+
+## [v0.1.15](https://github.com/thaeber/eurothermlib/compare/v0.1.14...v0.1.15) (2026-09-28)
+
+### Bug Fixes
+
+- Fix mix-up between connect/disconnect_terms ([d1d90ca](https://github.com/thaeber/eurothermlib/commit/d1d90cab300af9d135d07f2516b0378477e8f259))
+
+### Features
+
+- Support NI routing in pulsetrain ([8eb533a](https://github.com/thaeber/eurothermlib/commit/8eb533aebf07c3820262da8b5a34c7a70136aa79))
+
+### Chore
+
+- pre-commit run --all ([425ac58](https://github.com/thaeber/eurothermlib/commit/425ac58c4c09ff61af485ba0dc7bc99a8b15f52e))
 
 <a name="v0.1.14"></a>
 
@@ -192,3 +207,4 @@
 ### Build
 
 - **deps:** upgrading to python 3.11 ([1d97532](https://github.com/thaeber/eurothermlib/commit/1d97532f34a697726704dee69d1e9a33df5be30e))
+
