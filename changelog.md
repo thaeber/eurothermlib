@@ -1,11 +1,30 @@
 <!-- insertion marker -->
+<a name="v0.1.18"></a>
+
+## [v0.1.18](https://github.com/thaeber/eurothermlib/compare/v0.1.17...v0.1.18) (2026-09-28)
+
+### Bug Fixes
+
+- Lookup channel alias before validation ([db05d98](https://github.com/thaeber/eurothermlib/commit/db05d98600f19a77a0f029bcaa94f262554f5de7))
+
+<a name="v0.1.17"></a>
+
+## [v0.1.17](https://github.com/thaeber/eurothermlib/compare/v0.1.16...v0.1.17) (2026-09-28)
+
+<a name="v0.1.16"></a>
+
+## [v0.1.16](https://github.com/thaeber/eurothermlib/compare/v0.1.15...v0.1.16) (2026-09-28)
+
+### Bug Fixes
+
+- Catch KeyboardInterrupt exception ([e369a23](https://github.com/thaeber/eurothermlib/commit/e369a2334ba5d0bdb0dc8aa8cca2878c0881a63d))
+
 <a name="v0.1.15"></a>
 
 ## [v0.1.15](https://github.com/thaeber/eurothermlib/compare/v0.1.14...v0.1.15) (2026-09-28)
 
 ### Bug Fixes
 
-- Catch KeyboardInterrupt exception ([e369a23](https://github.com/thaeber/eurothermlib/commit/e369a2334ba5d0bdb0dc8aa8cca2878c0881a63d))
 - Fix mix-up between connect/disconnect_terms ([d1d90ca](https://github.com/thaeber/eurothermlib/commit/d1d90cab300af9d135d07f2516b0378477e8f259))
 
 ### Features
