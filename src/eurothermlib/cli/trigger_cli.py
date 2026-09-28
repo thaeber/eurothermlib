@@ -365,13 +365,15 @@ def pulsetrain(
     # lookup channel aliases in the configuration
     _channels = []
     for channel in channels:
+        channel = _lookup_channel_alias(cfg, channel)
         if not channel.startswith("/"):
             channel = "/" + channel
-        channel = _lookup_channel_alias(cfg, channel)
         _channels.append(channel)
+    print(f"Channels found in configuration: {_channels}")
 
     # ensure all channels are on the same device
     devices = {c.split("/")[1] for c in _channels}
+    print(f"Devices found in channels: {devices}")
     if len(devices) != 1:
         raise click.BadParameter("All channels must be on the same device.")
     ni_device = devices.pop()

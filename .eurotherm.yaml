@@ -13,6 +13,8 @@ devices:
 trigger:
   - name: laser
     channel: /dev2/pfi1
+  - name: xas
+    channel: /dev2/pfi1
 
 logging:
   directory: .output/{:%Y-%m-%d}
