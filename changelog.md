@@ -5,6 +5,7 @@
 
 ### Bug Fixes
 
+- Catch KeyboardInterrupt exception ([e369a23](https://github.com/thaeber/eurothermlib/commit/e369a2334ba5d0bdb0dc8aa8cca2878c0881a63d))
 - Fix mix-up between connect/disconnect_terms ([d1d90ca](https://github.com/thaeber/eurothermlib/commit/d1d90cab300af9d135d07f2516b0378477e8f259))
 
 ### Features
