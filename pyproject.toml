@@ -52,6 +52,10 @@ dev = [
 [tool.uv]
 python-preference = "only-managed"
 
+[tool.ruff.format]
+# Prefer single quotes over double quotes.
+quote-style = "single"
+
 [tool.black]
 skip-string-normalization = true
 extend-exclude = '''
