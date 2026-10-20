@@ -1,4 +1,16 @@
 <!-- insertion marker -->
+<a name="v0.1.19"></a>
+
+## [v0.1.19](https://github.com/thaeber/eurothermlib/compare/v0.1.18...v0.1.19) (2026-10-20)
+
+### Bug Fixes
+
+- Upgraded to aiohtpp>=3.14.4 due to a security issue (CWE-770) ([35614e5](https://github.com/thaeber/eurothermlib/commit/35614e55a1c19ff37e9bbc20b84004281eeed975))
+
+### Style
+
+- Add quote-style preference for Ruff formatter ([18d422c](https://github.com/thaeber/eurothermlib/commit/18d422c8b9f8007419182186a715e7be5cec643a))
+
 <a name="v0.1.18"></a>
 
 ## [v0.1.18](https://github.com/thaeber/eurothermlib/compare/v0.1.17...v0.1.18) (2026-09-28)
