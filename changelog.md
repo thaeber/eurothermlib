@@ -1,4 +1,13 @@
 <!-- insertion marker -->
+<a name="v0.1.20"></a>
+
+## [v0.1.20](https://github.com/thaeber/eurothermlib/compare/v0.1.19...v0.1.20) (2026-11-14)
+
+### Bug Fixes
+
+- Updated dependencies in response to https://github.com/advisories/GHSA-mmhr-3c5m-f64f ([627636f](https://github.com/thaeber/eurothermlib/commit/627636f68ec059b974263cfeb3352b5b91f84a33))
+- Upgrading `certifi` transisitve dependency in `uv.lock` ([d012c46](https://github.com/thaeber/eurothermlib/commit/d012c46248c2be21a95f16c232304a211c70ac2a))
+
 <a name="v0.1.19"></a>
 
 ## [v0.1.19](https://github.com/thaeber/eurothermlib/compare/v0.1.18...v0.1.19) (2026-10-20)
